@@ -48,8 +48,7 @@ import pandas as pd
 import pathlib
 import fnmatch
 
-# split utils from the web
-import split_utils
+
 
 
 import ssl
@@ -90,12 +89,12 @@ from tensorflow.keras.utils import multi_gpu_model # Multi-GPU Training ref: htt
 
 
 
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN'
-# default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/FlickrCNN'
+default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
 os.chdir(default_path)
 # photo_path = default_path + '/Photos_168_retraining'
 
-
+# split utils from the web
+import split_utils
 from keras.applications import inception_resnet_v2
 
 
@@ -117,21 +116,72 @@ img_width, img_height = 331, 331
 # nb_train_samples = 210
 # nb_validation_samples = 99
 
-train_data_dir = "Photos_iterative_Aug2019/train"
-validation_data_dir = "Photos_iterative_Aug2019/validation"
+train_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/"
+# validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
 
 batch_size = 64 # proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
 epochs = 100
 
-batch_size   #  Means the number of images used in one batch. If you have 320 images and your batch size is 32, you need 10 internal iterations go through the data set once (which is called `one epoch')
-# It is set  proportional to the training sample size. There are discussions but generally if you can afford, bigger is better. It
+#batch_size means the number of images used in one batch. If you have 320 images and your batch size is 32, you need 10 internal iterations go through the data set once (which is called `one epoch')
+# It is set proportional to the training sample size. There are discussions but generally if you can afford, bigger is better. It
 
-epochs  # An epoch means the whole input dataset has been used for training the network. There are some heuristics to determine the maximum epoch. Also there is a way to stop the training based on the performance (callled  `Early stopping').
-
-
-num_classes = 16
+# An epoch means the whole input dataset has been used for training the network. There are some heuristics to determine the maximum epoch. Also there is a way to stop the training based on the performance (callled  `Early stopping').
 
 
+num_classes = 44
+#
+# None
+# Found 5365 images belonging to 44 classes.
+# Found 2329 images belonging to 44 classes.
+# ****************
+# Class #0 = Amphibians
+# Class #1 = Backpacking
+# Class #2 = Beach
+# Class #3 = Bicycles
+# Class #4 = Birds
+# Class #5 = Birdwatchers
+# Class #6 = Boat
+# Class #7 = Bustravel
+# Class #8 = Camping
+# Class #9 = Canoe
+# Class #10 = Canyoning
+# Class #11 = Caving
+# Class #12 = Climbing
+# Class #13 = Coffee
+# Class #14 = Cows
+# Class #15 = Diving
+# Class #16 = Fishing
+# Class #17 = Flooding
+# Class #18 = Flowers
+# Class #19 = Hiking
+# Class #20 = Horses
+# Class #21 = Hotsprings
+# Class #22 = Hunting
+# Class #23 = Insects
+# Class #24 = Kitesurfing
+# Class #25 = Landscapes
+# Class #26 = Mammals
+# Class #27 = Markets
+# Class #28 = Monkeys Sloths
+# Class #29 = Motorcycles
+# Class #30 = Paragliding
+# Class #31 = Pplnoactivity
+# Class #32 = Rafting
+# Class #33 = Reptiles
+# Class #34 = Skyboat
+# Class #35 = Surfing
+# Class #36 = Swimming
+# Class #37 = Tourgroups
+# Class #38 = Trailrunning
+# Class #39 = Volcano
+# Class #40 = Waterfall
+# Class #41 = Whalewatching
+# Class #42 = Ziplining
+# Class #43 = otheractivities
+# ****************
+# the ratio of validation_split is 0.3
+# the size of train_dir is 5365
+# the size of val_dir is 2329
 
 
 ##### build our classifier model based on pre-trained InceptionResNetV2:
@@ -208,7 +258,7 @@ model_final = Model(inputs = model.input, outputs = predictions)
 
 ## load previously trained weights
 # model_final.load_weights('TrainedWeights/InceptionResnetV2_retrain_instagram_epoch150_acc0.97.h5')
-model_final.load_weights('TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_16classes_finetuning_bigdata_epoch100_val_acc0.88.h5')
+# model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_16classes_finetuning_iterative_final_val_acc0.88.h5')
 
 
 # First retraining
@@ -311,7 +361,7 @@ model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', me
 print(model_final.summary())
 
 # Save the model architecture
-with open('InceptionResnetV2_retrain_instagram_final_architecture_dropout30.json', 'w') as f:
+with open('Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json', 'w') as f:
     f.write(model_final.to_json())
 
 validation_split = 0.3
@@ -378,7 +428,7 @@ print('the size of val_dir is {}'.format(nb_validation_samples))
 
 
 # Save the model according to the conditions
-checkpoint = ModelCheckpoint("TrainedWeights/InceptionResnetV2_Seattle_retrain.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=3)
+checkpoint = ModelCheckpoint("../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=5)
 
 
 early = EarlyStopping(monitor='val_acc', min_delta=0, patience=10, verbose=1, mode='auto')
@@ -421,11 +471,11 @@ history = model_final.fit_generator(
 # at this point, the unfreezed layers are well trained.
 
 # Save the model
-model_final.save('TrainedWeights/InceptionResnetV2_retrain_instagram_final.h5')
+model_final.save('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_costarica.h5')
 
 # save training history
 history_df = pd.DataFrame(history.history)
-history_df.to_csv('TrainedWeights/InceptionResnetV2_retrain_instagram_final.csv')
+history_df.to_csv('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_costarica.csv')
 
 acc = history.history['acc']
 val_acc = history.history['val_acc']
@@ -496,7 +546,8 @@ for i in range(len(errors)):
 
 ####
 ### @todo feature extraction
-
+# @todo tensorboard
+# @todo data augmentation
 
 
 #
