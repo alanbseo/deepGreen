@@ -50,18 +50,26 @@ import fnmatch
 
 from shutil import copyfile
 
-# default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/FlickrCNN'
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
-os.chdir(default_path)
-
+default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 modelname = "InceptionResnetV2_dropout30"
 dataname = "FlickrCR_Photos_All"
-
+model_json = 'Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json'
+trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_44classes_finetuning_iterative_first_val_acc0.76.h5'
+photo_path_base = '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
 out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
-out_path = out_path_base + modelname + "/" + dataname + "/"
+#
+# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
+# modelname = "InceptionResnetV2_dropout30"
+# dataname = "FlickrSeattle_Photos_All"
+# model_json = "Model/InceptionResnetV2_retrain_instagram_final_architecture_dropout30.json"
+# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle' # FlickrSeattle_Photos_Flickr_All/'
+# trained_weights = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_16classes_finetuning_iterative_final_val_acc0.88.h5"
+#
+# out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Sep2019/"
 
-# photo_path = default_path + '/Photos_50_Flickr'
-photo_path_base =   '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
+os.chdir(default_path)
+
+out_path = out_path_base + modelname + "/" + dataname + "/"
 
 prediction_batch_size = 92  # to increase the speed of tagging .
 # number of images for one batch prediction
@@ -133,12 +141,15 @@ prediction_batch_size = 92  # to increase the speed of tagging .
 # Class #42 = Ziplining
 # Class #43 = otheractivities
 # ****************
-classes = ["Amphibians", "Backpacking", "Beach", "Bicycles", "Birds", "Birdwatchers", "Boat", "Bustravel", "Camping",
-         "Canoe", "Canyoning", "Caving", "Climbing", "Coffee", "Cows", "Diving", "Fishing", "Flooding", "Flowers",
-           "Hiking", "Horses", "Hotsprings", "Hunting", "Insects", "Kitesurfing", "Landscapes", "Mammals", "Markets",
-           "Monkeys Sloths", "Motorcycles", "Paragliding", "Pplnoactivity", "Rafting", "Reptiles", "Skyboat", "Surfing",
-        "Swimming", "Tourgroups", "Trailrunning", "Volcano", "Waterfall", "Whalewatching", "Ziplining", "otheractivities"]
-
+classes = ["Amphibians", "Backpacking", "Beach", "Bicycles", "Birds", "Birdwatchers", "Boat", "Bustravel",
+           "Camping",
+           "Canoe", "Canyoning", "Caving", "Climbing", "Coffee", "Cows", "Diving", "Fishing", "Flooding", "Flowers",
+           "Hiking", "Horses", "Hotsprings", "Hunting", "Insects", "Kitesurfing", "Landscapes", "Mammals",
+           "Markets",
+           "Monkeys Sloths", "Motorcycles", "Paragliding", "Pplnoactivity", "Rafting", "Reptiles", "Skyboat",
+           "Surfing",
+           "Swimming", "Tourgroups", "Trailrunning", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
+           "otheractivities"]
 
 classes_arr = np.array(classes)
 # # Imagenet class labels
@@ -151,7 +162,6 @@ classes_arr = np.array(classes)
 #     classlabel.append(CLASS_INDEX[str(i)][1])
 # classes = np.array(classlabel)
 
-
 num_classes = len(classes)
 
 top = 10  # choose top-seven classes
@@ -159,20 +169,16 @@ top = 10  # choose top-seven classes
 ##### Predict
 
 from keras.models import model_from_json
+
 # Load the retrained CNN model
 
 # Model reconstruction from JSON file
-with open('Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json', 'r') as f:
+with open(model_json, 'r') as f:
     model_trained = model_from_json(f.read())
 
 # Load weights into the new model
-model_trained.load_weights(
-    '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_44classes_finetuning_iterative_first_val_acc0.76.h5')
+model_trained.load_weights(trained_weights)
 
-
-
-# filename = 'photoid_19568808955.jpg' # granpa
-# filename = 'photoid_23663993529.jpg' # bridge
 
 def onlyfolders(path):
     for file in os.listdir(path):
@@ -185,27 +191,18 @@ def onlyfiles(path):
         if os.path.isdir(os.path.join(path, file)):
             yield file
 
-# foldernames = ["."]
-# foldername = foldernames[0]
 
 foldernames = os.listdir(photo_path_base)
 
-
-# [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(".")) for f in fn]
-
+foldername = foldernames[0]
 
 for foldername in foldernames:
 
     print(foldername)
     photo_path_aoi = photo_path_base + "/" + foldername
 
-    #years = os.listdir(photo_path_aoi)
-
-    # photo_path = photo_path_aoi + "/" + year + "/"
-
     ### Read filenames
-    #filenames = os.listdir(photo_path_aoi)
-
+    # filenames = os.listdir(photo_path_aoi)
     filenames = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(photo_path_aoi)) for f in fn]
 
     if len(filenames) == 0:
@@ -217,6 +214,9 @@ for foldername in foldernames:
     filenames = filenames1 + filenames2
 
     filenames = filenames1 + filenames2
+
+    base_filenames = list(map(os.path.basename, filenames))
+
     n_files = len(filenames)
 
     prediction_steps_per_epoch = int(np.ceil(n_files / prediction_batch_size))
@@ -226,7 +226,7 @@ for foldername in foldernames:
 
     for step_start_idx in range(0, n_files, batch_size_folder):
 
-        end_idx = min(step_start_idx + batch_size_folder, n_files) - 1
+        end_idx = min(step_start_idx + batch_size_folder, n_files)
 
         print(step_start_idx)
         print(end_idx)
@@ -238,7 +238,7 @@ for foldername in foldernames:
 
             filenames_batch = filenames[step_start_idx:end_idx]
 
-        bsize_tmp = min(batch_size_folder, len(filenames_batch)) # for the last batch
+        bsize_tmp = min(batch_size_folder, len(filenames_batch))  # for the last batch
 
         images = []
 
@@ -264,7 +264,6 @@ for foldername in foldernames:
         ## top selected classes
         top_classes_idx_arr = np.argsort(predictions)[:, ::-1][:, :top]
 
-
         top_classes_arr = classes_arr[top_classes_idx_arr]
         print(top_classes_arr)
 
@@ -283,11 +282,12 @@ for foldername in foldernames:
         top_classes_probs_arr[0, :]
 
         predicted_class_v = top_classes_arr[:, 0]
+        print('Predicted:', predicted_class_v)
 
 
         # kind of equivalent to `sapply()' in R
         def foo_get_predicted_filename(x):
-            return (out_path + "Result/Original_" + modelname + "/" + foldername + "/" + x)
+            return (out_path + "Result/" + modelname + "/OriginalPhotos/" + foldername + "/" + x)
 
 
         predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v))
@@ -305,7 +305,34 @@ for foldername in foldernames:
             if not (os.path.exists(save_folder)):
                 os.makedirs(save_folder, exist_ok=False)
 
-            copyfile( filenames_batch[i], predicted_filenames[i] + '/' + os.path.basename(filenames_batch[i]))
+            copyfile(filenames_batch[i], predicted_filenames[i] + '/' + os.path.basename(filenames_batch[i]))
+
+        arr_tmp = pd.DataFrame(np.concatenate((top_classes_arr, top_classes_probs_arr), axis=1))
+
+        if step_start_idx == 0:
+            arr_aoi = arr_tmp
+        else:
+            arr_aoi = np.concatenate((arr_aoi, arr_tmp), axis=0)
+
+    # Write csv files
+
+    name_csv = out_path + "Result/" + modelname + "/CSV/" + foldername + ".csv"
+    if not (os.path.exists(os.path.dirname(name_csv))):
+        os.makedirs(os.path.dirname(name_csv), exist_ok=False)
+
+    # Write a Pandas data frame
+    df_aoi = pd.concat([pd.DataFrame(base_filenames), pd.DataFrame(arr_aoi)], axis=1)
+    header = np.concatenate(
+        (["Filename"], ["Top1", "Top2", "Top3", "Top4", "Top5", "Top6", "Top7", "Top8", "Top9", "Top10"],
+         ["Prob1", "Prob2", "Prob3", "Prob4", "Prob5", "Prob6", "Prob7", "Prob8", "Prob9", "Prob10"]))
+
+    df_aoi.columns = header
+
+    df_aoi.to_csv(name_csv, index=False, columns=header)
+
+    # @todo attention map
+
+
 
 #
 #
