@@ -50,13 +50,13 @@ import fnmatch
 
 from shutil import copyfile
 
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
-modelname = "InceptionResnetV2_dropout30"
-dataname = "FlickrCR_Photos_All"
-model_json = 'Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json'
-trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_44classes_finetuning_iterative_first_val_acc0.76.h5'
-photo_path_base = '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
-out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
+# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
+# modelname = "InceptionResnetV2_dropout30"
+# dataname = "FlickrCR_Photos_All"
+# model_json = 'Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json'
+# trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_44classes_finetuning_iterative_first_val_acc0.76.h5'
+# photo_path_base = '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
+# out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
 #
 # default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
 # modelname = "InceptionResnetV2_dropout30"
@@ -66,6 +66,18 @@ out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
 # trained_weights = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_16classes_finetuning_iterative_final_val_acc0.88.h5"
 #
 # out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Sep2019/"
+
+
+default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
+modelname = "InceptionResnetV2_dropout30"
+dataname = "Korea"
+model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout30.json'
+trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_third_val_acc_0.69.h5'
+photo_path_base = '/DATA2TB/CameraTraps_Korea/Unlabelled/'
+out_path_base = "/DATA2TB/CameraTraps_Korea/Tagging2019/"
+
+
+
 
 os.chdir(default_path)
 
@@ -141,15 +153,21 @@ prediction_batch_size = 92  # to increase the speed of tagging .
 # Class #42 = Ziplining
 # Class #43 = otheractivities
 # ****************
-classes = ["Amphibians", "Backpacking", "Beach", "Bicycles", "Birds", "Birdwatchers", "Boat", "Bustravel",
-           "Camping",
-           "Canoe", "Canyoning", "Caving", "Climbing", "Coffee", "Cows", "Diving", "Fishing", "Flooding", "Flowers",
-           "Hiking", "Horses", "Hotsprings", "Hunting", "Insects", "Kitesurfing", "Landscapes", "Mammals",
-           "Markets",
-           "Monkeys Sloths", "Motorcycles", "Paragliding", "Pplnoactivity", "Rafting", "Reptiles", "Skyboat",
-           "Surfing",
-           "Swimming", "Tourgroups", "Trailrunning", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
-           "otheractivities"]
+# classes = ["Amphibians", "Backpacking", "Beach", "Bicycles", "Birds", "Birdwatchers", "Boat", "Bustravel",
+#            "Camping",
+#            "Canoe", "Canyoning", "Caving", "Climbing", "Coffee", "Cows", "Diving", "Fishing", "Flooding", "Flowers",
+#            "Hiking", "Horses", "Hotsprings", "Hunting", "Insects", "Kitesurfing", "Landscapes", "Mammals",
+#            "Markets",
+#            "Monkeys Sloths", "Motorcycles", "Paragliding", "Pplnoactivity", "Rafting", "Reptiles", "Skyboat",
+#            "Surfing",
+#            "Swimming", "Tourgroups", "Trailrunning", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
+#            "otheractivities"]
+#
+classes = ["Amur hedgehog", "Birds", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Human", "Korean hare",
+           "Leopard cat", "Marten", "No animal", "Racoon dog", "Red squirrel", "Rodentia", "Roe dear", "Siberian weasel",
+           "Water deer", "Wild boar", "Unidentified"]
+# None
+
 
 classes_arr = np.array(classes)
 # # Imagenet class labels
@@ -164,7 +182,7 @@ classes_arr = np.array(classes)
 
 num_classes = len(classes)
 
-top = 10  # choose top-seven classes
+top = 10  # choose top-n classes
 
 ##### Predict
 

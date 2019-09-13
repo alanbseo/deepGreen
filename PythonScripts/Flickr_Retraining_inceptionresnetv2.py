@@ -111,15 +111,18 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard,
 
 
 img_width, img_height = 331, 331
-# train_data_dir = "Photos_338_retraining/train"
-# validation_data_dir = "Photos_338_retraining/validation"
 # nb_train_samples = 210
 # nb_validation_samples = 99
 
-train_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/"
+# train_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/"
 # validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
+train_data_dir = "../LabelledData/Korea/Korea_CameraTrapPhotos/"
+
+sitename = "Korea"
+
 
 batch_size = 64 # proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
+val_batch_size = batch_size
 epochs = 100
 
 #batch_size means the number of images used in one batch. If you have 320 images and your batch size is 32, you need 10 internal iterations go through the data set once (which is called `one epoch')
@@ -128,11 +131,35 @@ epochs = 100
 # An epoch means the whole input dataset has been used for training the network. There are some heuristics to determine the maximum epoch. Also there is a way to stop the training based on the performance (callled  `Early stopping').
 
 
-num_classes = 44
-#
+num_classes = 21
+
+# ____________________________________________________________________________________________
 # None
-# Found 5365 images belonging to 44 classes.
-# Found 2329 images belonging to 44 classes.
+# Found 13285 images belonging to 20 classes.
+# Found 5708 images belonging to 20 classes.
+# ****************
+# Class #0 = Amur hedgehog
+# Class #1 = Birds
+# Class #2 = Car
+# Class #3 = Cat
+# Class #4 = Chipmunk
+# Class #5 = Dog
+# Class #6 = Eurasian badger
+# Class #7 = Goral
+# Class #8 = Human
+# Class #9 = Korean hare
+# Class #10 = Leopard cat
+# Class #11 = Marten
+# Class #12 = No animal
+# Class #13 = Racoon dog
+# Class #14 = Red squirrel
+# Class #15 = Rodentia
+# Class #16 = Roe dear
+# Class #17 = Siberian weasel
+# Class #18 = Water deer
+# Class #19 = Wild boar
+# Class #20 = unidentified
+# None
 # ****************
 # Class #0 = Amphibians
 # Class #1 = Backpacking
@@ -242,8 +269,10 @@ x = Dense(1024, activation='relu')(x)
 # https://datascience.stackexchange.com/questions/28120/globalaveragepooling2d-in-inception-v3-example
 # If the network is stuck at 50% accuracy, there’s no reason to do any dropout.
 # Dropout is a regularization process to avoid overfitting. But your problem is underfitting.
-x = Dropout(0.3)(x) # 30% dropout
+x = Dropout(0.5)(x) # 30% dropout
 
+
+# num_classes_prev= 20
 # A Dense (fully connected) layer which generates softmax class score for each class
 predictions = Dense(num_classes, activation='softmax', name='softmax')(x)
 
@@ -258,12 +287,20 @@ model_final = Model(inputs = model.input, outputs = predictions)
 
 ## load previously trained weights
 # model_final.load_weights('TrainedWeights/InceptionResnetV2_retrain_instagram_epoch150_acc0.97.h5')
-# model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_16classes_finetuning_iterative_final_val_acc0.88.h5')
+model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_fourth_val_acc_0.68.h5')
+
 
 
 # First retraining
 #for layer in model.layers[:]:
 #    layer.trainable = False
+
+
+## adding classes
+
+##
+# predictions_new = Dense(num_classes, activation='softmax', name='softmax')(x)
+# model_final = Model(inputs = model.input, outputs = predictions_new)
 
 
 # We can start fine-tuning convolutional layers from inception V3. We will freeze the bottom N layers
@@ -298,10 +335,10 @@ for layer in model_final.layers[:FREEZE_LAYERS]:
 # we need to recompile the model for these modifications to take effect
 # Compile the final model using an Adam optimizer, with a low learning rate (since we are 'fine-tuning')
 #model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy', 'loss', 'val_acc'])
-model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
+model_final.compile(optimizer=Adam(lr=1e-4), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
 
 # we can use SGD with a low learning rate
-#model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=1e-4, momentum=0.9), metrics=["accuracy"])
+#model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=1e-4, momentum=0.9), metrics=["accuracy", "categorical_accuracy"])
 
 #
 # # https://github.com/keras-team/keras/issues/7924
@@ -361,7 +398,7 @@ model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', me
 print(model_final.summary())
 
 # Save the model architecture
-with open('Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json', 'w') as f:
+with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout30.json', 'w') as f:
     f.write(model_final.to_json())
 
 validation_split = 0.3
@@ -378,7 +415,8 @@ train_datagen = ImageDataGenerator(
     rescale = 1./255,
     horizontal_flip = True,
     fill_mode = "nearest",
-    zoom_range = 0.3,
+    zoom_range = 0.5,
+    brightness_range = [0.1, 1],
     width_shift_range = 0.3,
     height_shift_range=0.3,
     rotation_range=30)
@@ -389,7 +427,8 @@ val_datagen = ImageDataGenerator(
     rescale = 1./255,
     horizontal_flip = True,
     fill_mode = "nearest",
-    zoom_range = 0.3,
+    zoom_range = 0.5,
+    brightness_range=[0.1, 1],
     width_shift_range = 0.3,
     height_shift_range=0.3,
     rotation_range=30)
@@ -401,7 +440,6 @@ train_generator = train_datagen.flow_from_directory(
      batch_size = batch_size,
      class_mode = "categorical")
 
-val_batch_size = batch_size
 
 validation_generator = val_datagen.flow_from_directory(
     val_tmp_dir,
@@ -428,7 +466,7 @@ print('the size of val_dir is {}'.format(nb_validation_samples))
 
 
 # Save the model according to the conditions
-checkpoint = ModelCheckpoint("../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=5)
+checkpoint = ModelCheckpoint("../FlickrCNN/TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=5)
 
 
 early = EarlyStopping(monitor='val_acc', min_delta=0, patience=10, verbose=1, mode='auto')
@@ -471,11 +509,11 @@ history = model_final.fit_generator(
 # at this point, the unfreezed layers are well trained.
 
 # Save the model
-model_final.save('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_costarica.h5')
+model_final.save('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.h5')
 
 # save training history
 history_df = pd.DataFrame(history.history)
-history_df.to_csv('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_costarica.csv')
+history_df.to_csv('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.csv')
 
 acc = history.history['acc']
 val_acc = history.history['val_acc']
@@ -499,7 +537,6 @@ plt.legend()
 plt.show()
 
 
-
 # Get the filenames from the generator
 fnames = validation_generator.filenames
 
@@ -510,10 +547,13 @@ ground_truth = validation_generator.classes
 label2index = validation_generator.class_indices
 
 # Getting the mapping from class index to class label
-idx2label = dict((v,k) for k,v in label2index.items())
+idx2label = dict((v,k) for k, v in label2index.items())
+
+# validation_steps_per_epoch = int(np.ceil(nb_validation_samples / batch_size))
 
 # Get the predictions from the model using the generator
-predictions = model.predict_generator(validation_generator, steps=validation_generator.samples/validation_generator.batch_size,verbose=1)
+predictions = model.predict_generator(validation_generator, steps = validation_generator.samples /
+                                                                    validation_generator.batch_size, verbose=1)
 predicted_classes = np.argmax(predictions,axis=1)
 
 #errors = np.where(predicted_classes != ground_truth)[0]
@@ -539,18 +579,12 @@ for i in range(len(errors)):
     plt.show()
 
 
-
-### Feature extraction
-
+#### Feature extraction
 
 
-####
-### @todo feature extraction
-# @todo tensorboard
-# @todo data augmentation
+# @todo feature extraction
 
 
-#
 
 
 
