@@ -287,7 +287,7 @@ model_final = Model(inputs = model.input, outputs = predictions)
 
 ## load previously trained weights
 # model_final.load_weights('TrainedWeights/InceptionResnetV2_retrain_instagram_epoch150_acc0.97.h5')
-model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_fourth_val_acc_0.68.h5')
+model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.68.h5')
 
 
 
@@ -332,10 +332,25 @@ for layer in model_final.layers[:FREEZE_LAYERS]:
 # compile the model (should be done *after* setting layers to non-trainable)
 
 
-# we need to recompile the model for these modifications to take effect
+
+
+# Need to recompile the model for these modifications to take effect
 # Compile the final model using an Adam optimizer, with a low learning rate (since we are 'fine-tuning')
 #model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy', 'loss', 'val_acc'])
-model_final.compile(optimizer=Adam(lr=1e-4), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
+model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
+
+# lr: float >= 0. Learning rate.
+# beta_1: float, 0 < beta < 1. Generally close to 1.
+# beta_2: float, 0 < beta < 1. Generally close to 1.
+# epsilon: float >= 0. Fuzz factor.If None, defaults to K.epsilon().
+# decay: float >= 0. Learning rate decay over each update.
+# amsgrad: boolean. Whether to apply the AMSGrad variantof this algorithm from the paper
+
+# References:
+# https://keras.io/optimizers/
+# https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/
+# https://medium.com/@nishantnikhil/adam-optimizer-notes-ddac4fd7218
+
 
 # we can use SGD with a low learning rate
 #model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=1e-4, momentum=0.9), metrics=["accuracy", "categorical_accuracy"])
@@ -415,8 +430,8 @@ train_datagen = ImageDataGenerator(
     rescale = 1./255,
     horizontal_flip = True,
     fill_mode = "nearest",
-    zoom_range = 0.5,
-    brightness_range = [0.1, 1],
+    zoom_range = 0.3,
+    brightness_range = [0.3, 1],
     width_shift_range = 0.3,
     height_shift_range=0.3,
     rotation_range=30)
@@ -427,8 +442,8 @@ val_datagen = ImageDataGenerator(
     rescale = 1./255,
     horizontal_flip = True,
     fill_mode = "nearest",
-    zoom_range = 0.5,
-    brightness_range=[0.1, 1],
+    zoom_range = 0.3,
+    brightness_range=[0.3, 1],
     width_shift_range = 0.3,
     height_shift_range=0.3,
     rotation_range=30)
@@ -554,7 +569,7 @@ idx2label = dict((v,k) for k, v in label2index.items())
 # Get the predictions from the model using the generator
 predictions = model.predict_generator(validation_generator, steps = validation_generator.samples /
                                                                     validation_generator.batch_size, verbose=1)
-predicted_classes = np.argmax(predictions,axis=1)
+predicted_classes = np.argmax(predictions, axis=1)
 
 #errors = np.where(predicted_classes != ground_truth)[0]
 errors = np.where(np.not_equal(predicted_classes, ground_truth[0]))

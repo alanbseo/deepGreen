@@ -72,7 +72,7 @@ default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 modelname = "InceptionResnetV2_dropout30"
 dataname = "Korea"
 model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout30.json'
-trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_third_val_acc_0.69.h5'
+trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.69.h5'
 photo_path_base = '/DATA2TB/CameraTraps_Korea/Unlabelled/'
 out_path_base = "/DATA2TB/CameraTraps_Korea/Tagging2019/"
 
