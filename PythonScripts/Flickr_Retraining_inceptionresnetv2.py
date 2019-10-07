@@ -35,9 +35,9 @@
 
 
 import keras
-import numpy as np
+# import numpy as np
 import os
-import cv2
+# import cv2
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
 os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
@@ -47,8 +47,6 @@ import csv
 import pandas as pd
 import pathlib
 import fnmatch
-
-
 
 
 import ssl
@@ -80,9 +78,8 @@ import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib
 
 
-
 from keras.preprocessing import image
-from keras.applications import vgg16
+# from keras.applications import vgg16
 import numpy as np
 
 from tensorflow.keras.utils import multi_gpu_model # Multi-GPU Training ref: https://gist.github.com/mattiavarile/223d9c13c9f1919abe9a77931a4ab6c1
@@ -111,17 +108,29 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard,
 
 
 img_width, img_height = 331, 331
+
 # nb_train_samples = 210
 # nb_validation_samples = 99
 
-# train_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/"
+train_data_dir = "../LabelledData/Costa Rica/Training data_4_edited by Torben for second loop/"
 # validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
-train_data_dir = "../LabelledData/Korea/Korea_CameraTrapPhotos/"
+# train_data_dir = "../LabelledData/Korea/Korea_CameraTrapPhotos/"
+#train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
 
-sitename = "Korea"
+
+# sitename = "Korea"
+#sitename = "Seattle"
+sitename = "CostaRica"
+
+multiGPU = False
+dropout = 0.3
+
+addingClasses = False
+loadWeights = True
+num_layers_train = 3
 
 
-batch_size = 64 # proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
+batch_size = 32 # proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
 val_batch_size = batch_size
 epochs = 100
 
@@ -131,7 +140,7 @@ epochs = 100
 # An epoch means the whole input dataset has been used for training the network. There are some heuristics to determine the maximum epoch. Also there is a way to stop the training based on the performance (callled  `Early stopping').
 
 
-num_classes = 21
+num_classes = 30
 
 # ____________________________________________________________________________________________
 # None
@@ -240,8 +249,6 @@ x = model.output
 
 # Now that we have set the trainable parameters of our base network, we would like to add a classifier on top of the convolutional base. We will simply add a fully connected layer followed by a softmax layer with num_classes outputs.
 
-# Adding custom Layer
-# x = Flatten()(x)
 
 # https://keras.io/applications/#fine-tune-inceptionv3-on-a-new-set-of-classes
 # add a global spatial average pooling layer
@@ -263,44 +270,52 @@ x = model.output
 
 
 # Notice how that the size of the matrix slices can change, for example, the input might be 32x32x8,
-# and we’ll still get an 8 dimensional vector as an output from the global average pooling layer.
+# and we’ll still get an n-of-classes dimensional vector as an output from the global average pooling layer.
+# Adding custom Layer
+# x = Flatten()(x)
 x = GlobalAveragePooling2D()(x) # before dense layer
 x = Dense(1024, activation='relu')(x)
 # https://datascience.stackexchange.com/questions/28120/globalaveragepooling2d-in-inception-v3-example
-# If the network is stuck at 50% accuracy, there’s no reason to do any dropout.
-# Dropout is a regularization process to avoid overfitting. But your problem is underfitting.
-x = Dropout(0.5)(x) # 30% dropout
 
 
-# num_classes_prev= 20
-# A Dense (fully connected) layer which generates softmax class score for each class
-predictions = Dense(num_classes, activation='softmax', name='softmax')(x)
-
-
-# creating the final model
-# this is the model we will train
-model_final = Model(inputs = model.input, outputs = predictions)
-
-
-#Now we will be training only the classifiers (FC layers)
-
-
-## load previously trained weights
-# model_final.load_weights('TrainedWeights/InceptionResnetV2_retrain_instagram_epoch150_acc0.97.h5')
-model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.68.h5')
+if dropout > 0:
+    # If the network is stuck at 50% accuracy, there’s no reason to do any dropout.
+    # Dropout is a regularization process to avoid overfitting; when underfitting not really useful .
+    x = Dropout(0.3)(x) # 30% dropout
 
 
 
-# First retraining
-#for layer in model.layers[:]:
-#    layer.trainable = False
+
+if addingClasses:
+
+    num_classes_prev= 16
+    # A Dense (fully connected) layer which generates softmax class score for each class
+    predictions_old = Dense(num_classes_prev, activation='softmax', name='softmax')(x)
 
 
-## adding classes
+    # creating the final model to train
+    model_final = Model(inputs = model.input, outputs = predictions_old)
 
-##
-# predictions_new = Dense(num_classes, activation='softmax', name='softmax')(x)
-# model_final = Model(inputs = model.input, outputs = predictions_new)
+    ## adding classes
+    # @todo possibly wrong? delete the old layers
+    predictions_new = Dense(num_classes, activation='softmax', name='softmax')(x)
+    model_final = Model(inputs = model.input, outputs = predictions_new)
+
+else:
+    # A Dense (fully connected) layer which generates softmax class score for each class
+
+    predictions_new = Dense(num_classes, activation='softmax', name='softmax')(x)
+    model_final = Model(inputs = model.input, outputs = predictions_new)
+
+
+## load trained weights
+if loadWeights:
+
+
+    ## load previously trained weights (old class number)
+    model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_first_val_acc0.79.h5')
+#   model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5')
+
 
 
 # We can start fine-tuning convolutional layers from inception V3. We will freeze the bottom N layers
@@ -315,19 +330,20 @@ model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_
 
 # let's visualize layer names and layer indices to see how many layers
 # we should freeze:
-for i, layer in enumerate(model_final.layers):
-    print(i, layer.name)
+# for i, layer in enumerate(model_final.layers):
+#     print(i, layer.name)
 
 # Fine tuning (
-FREEZE_LAYERS = len(model.layers) - 5 # train the newly added layers and the last few layers
+FREEZE_LAYERS = len(model.layers) - num_layers_train # train the newly added layers and the last few layers
 
 for layer in model_final.layers[:FREEZE_LAYERS]:
     layer.trainable = False
 
 
 
-# @todo multi gpu throws an error possibly due to version conflicts..
-# model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
+if multiGPU:
+    # @todo multi gpu throws an error possibly due to version conflicts..
+    model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
 
 # compile the model (should be done *after* setting layers to non-trainable)
 
@@ -409,11 +425,10 @@ model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', me
 # model.layers[-1].set_weights(weights_new)
 #
 
-
 print(model_final.summary())
 
 # Save the model architecture
-with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout30.json', 'w') as f:
+with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout' + '0.3' + '.json', 'w') as f:
     f.write(model_final.to_json())
 
 validation_split = 0.3

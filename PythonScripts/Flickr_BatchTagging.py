@@ -42,6 +42,8 @@ from keras import backend as k
 from PIL import ImageFont, ImageDraw, Image
 
 img_width, img_height = 331, 331
+from keras.layers import Dense, GlobalAveragePooling2D
+from keras.models import Sequential, Model
 
 import matplotlib.pyplot as plt
 
@@ -50,7 +52,8 @@ import fnmatch
 
 from shutil import copyfile
 
-# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
+default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
+
 # modelname = "InceptionResnetV2_dropout30"
 # dataname = "FlickrCR_Photos_All"
 # model_json = 'Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json'
@@ -58,23 +61,24 @@ from shutil import copyfile
 # photo_path_base = '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
 # out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
 #
-# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
-# modelname = "InceptionResnetV2_dropout30"
-# dataname = "FlickrSeattle_Photos_All"
-# model_json = "Model/InceptionResnetV2_retrain_instagram_final_architecture_dropout30.json"
-# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle' # FlickrSeattle_Photos_Flickr_All/'
-# trained_weights = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_16classes_finetuning_iterative_final_val_acc0.88.h5"
-#
-# out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Sep2019/"
+
+modelname = "InceptionResnetV2_dropout50"
+dataname = "FlickrSeattle_Photos_All"
+model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_nodropout.json"
+#photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle' # FlickrSeattle_Photos_Flickr_All/'
+photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+
+trained_weights = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5"
+
+out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Sep2019/Flickr2/"
 
 
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
-modelname = "InceptionResnetV2_dropout30"
-dataname = "Korea"
-model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout30.json'
-trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.69.h5'
-photo_path_base = '/DATA2TB/CameraTraps_Korea/Unlabelled/'
-out_path_base = "/DATA2TB/CameraTraps_Korea/Tagging2019/"
+#  modelname = "InceptionResnetV2_dropout30"
+# dataname = "Korea"
+# model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout30.json'
+# trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.69.h5'
+# photo_path_base = '/DATA2TB/CameraTraps_Korea/Unlabelled/'
+# out_path_base = "/DATA2TB/CameraTraps_Korea/Tagging2019/"
 
 
 
@@ -102,10 +106,26 @@ prediction_batch_size = 92  # to increase the speed of tagging .
 # Class #13 = rock climbing
 # Class #14 = swimming
 # Class #15 = trailrunning
-# ****************
-# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
-#            "hotsprings", "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
-#            "trailrunning"]
+# # ****************
+#
+# Class #0 = backpacking
+# Class #1 = birdwatching
+# Class #2 = boating
+# Class #3 = camping
+# Class #4 = fishing
+# Class #5 = flooding
+# Class #6 = hiking
+# Class #7 = horseriding
+# Class #8 = mtn_biking
+# Class #9 = noactivity
+# Class #10 = otheractivities
+# Class #11 = pplnoactivity
+# Class #12 = rock climbing
+# Class #13 = swimming
+# Class #14 = trailrunning
+classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
+           "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
+           "trailrunning"]
 
 # ****************
 # Class #0 = Amphibians
@@ -163,9 +183,9 @@ prediction_batch_size = 92  # to increase the speed of tagging .
 #            "Swimming", "Tourgroups", "Trailrunning", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
 #            "otheractivities"]
 #
-classes = ["Amur hedgehog", "Birds", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Human", "Korean hare",
-           "Leopard cat", "Marten", "No animal", "Racoon dog", "Red squirrel", "Rodentia", "Roe dear", "Siberian weasel",
-           "Water deer", "Wild boar", "Unidentified"]
+# classes = ["Amur hedgehog", "Birds", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Human", "Korean hare",
+#           "Leopard cat", "Marten", "No animal", "Racoon dog", "Red squirrel", "Rodentia", "Roe dear", "Siberian weasel",
+#           "Water deer", "Wild boar", "Unidentified"]
 # None
 
 
@@ -191,8 +211,17 @@ from keras.models import model_from_json
 # Load the retrained CNN model
 
 # Model reconstruction from JSON file
-with open(model_json, 'r') as f:
-    model_trained = model_from_json(f.read())
+#with open(model_json, 'r') as f:
+#    model_trained = model_from_json(f.read())
+
+
+
+model_trained = inception_resnet_v2.InceptionResNetV2(include_top=False, weights='imagenet',input_tensor=None, input_shape=(img_width, img_height, 3))
+x = model_trained.output
+x = GlobalAveragePooling2D()(x) # before dense layer
+x = Dense(1024, activation='relu')(x)
+predictions_new = Dense(num_classes, activation='softmax', name='softmax')(x)
+model_trained = Model(inputs=model_trained.input, outputs=predictions_new)
 
 # Load weights into the new model
 model_trained.load_weights(trained_weights)
