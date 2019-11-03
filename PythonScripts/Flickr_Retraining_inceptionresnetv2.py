@@ -41,7 +41,8 @@ import os
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
 os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
-
+# os.environ['HIP_VISIBLE_DEVICES'] = '0'
+#
 
 import csv
 import pandas as pd
@@ -84,7 +85,7 @@ import numpy as np
 
 from tensorflow.keras.utils import multi_gpu_model # Multi-GPU Training ref: https://gist.github.com/mattiavarile/223d9c13c9f1919abe9a77931a4ab6c1
 
-
+import math
 
 default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
 os.chdir(default_path)
@@ -106,33 +107,58 @@ from keras.layers import Dropout, Flatten, Dense, GlobalAveragePooling2D
 from keras import backend as k
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard, EarlyStopping
 
+#https://medium.com/@noel_kennedy/how-to-use-half-precision-float16-when-training-on-rtx-cards-with-tensorflow-keras-d4033d59f9e4
+# k.set_floatx('float32')
+# k.set_epsilon(1e-6) #default is 1e-7
+
+from keras.backend.common import set_floatx
+
+# set_floatx('float16')
+
+# https://www.tensorflow.org/xla#step_3_run_with_xla
+# tf.config.optimizer.set_jit(True)
+
+#k.config.optimizer.set_jit(True)
 
 img_width, img_height = 331, 331
 
 # nb_train_samples = 210
 # nb_validation_samples = 99
 
-train_data_dir = "../LabelledData/Costa Rica/Training data_4_edited by Torben for second loop/"
+# train_data_dir = "../LabelledData/Costa Rica/Training data_4_edited by Torben for second loop/"
 # validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
 # train_data_dir = "../LabelledData/Korea/Korea_CameraTrapPhotos/"
-#train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
+train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
+
 
 
 # sitename = "Korea"
-#sitename = "Seattle"
-sitename = "CostaRica"
+sitename = "Seattle"
+#sitename = "CostaRica"
 
 multiGPU = False
-dropout = 0.3
+dropout = 0.5
 
 addingClasses = False
-loadWeights = True
+num_classes_prev = 16
+
+
+loadWeights = False
+#trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
+trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+
 num_layers_train = 3
 
 
-batch_size = 32 # proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
+batch_size = 513     # proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
 val_batch_size = batch_size
 epochs = 100
+
+
+
+## Correct for imbalanced data
+# https://datascience.stackexchange.com/questions/13490/how-to-set-class-weights-for-imbalanced-classes-in-keras
+
 
 #batch_size means the number of images used in one batch. If you have 320 images and your batch size is 32, you need 10 internal iterations go through the data set once (which is called `one epoch')
 # It is set proportional to the training sample size. There are discussions but generally if you can afford, bigger is better. It
@@ -140,7 +166,8 @@ epochs = 100
 # An epoch means the whole input dataset has been used for training the network. There are some heuristics to determine the maximum epoch. Also there is a way to stop the training based on the performance (callled  `Early stopping').
 
 
-num_classes = 30
+# num_classes = 30
+num_classes = 15
 
 # ____________________________________________________________________________________________
 # None
@@ -281,14 +308,12 @@ x = Dense(1024, activation='relu')(x)
 if dropout > 0:
     # If the network is stuck at 50% accuracy, there’s no reason to do any dropout.
     # Dropout is a regularization process to avoid overfitting; when underfitting not really useful .
-    x = Dropout(0.3)(x) # 30% dropout
-
+    x = Dropout(dropout)(x) # 30% dropout
 
 
 
 if addingClasses:
 
-    num_classes_prev= 16
     # A Dense (fully connected) layer which generates softmax class score for each class
     predictions_old = Dense(num_classes_prev, activation='softmax', name='softmax')(x)
 
@@ -313,8 +338,7 @@ if loadWeights:
 
 
     ## load previously trained weights (old class number)
-    model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_first_val_acc0.79.h5')
-#   model_final.load_weights('../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5')
+    model_final.load_weights(trainedweights_name)
 
 
 
@@ -342,7 +366,7 @@ for layer in model_final.layers[:FREEZE_LAYERS]:
 
 
 if multiGPU:
-    # @todo multi gpu throws an error possibly due to version conflicts..
+    # @todo multi gpu throws an error (tuple does not exist?) possibly due to version conflicts..
     model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
 
 # compile the model (should be done *after* setting layers to non-trainable)
@@ -353,7 +377,7 @@ if multiGPU:
 # Need to recompile the model for these modifications to take effect
 # Compile the final model using an Adam optimizer, with a low learning rate (since we are 'fine-tuning')
 #model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy', 'loss', 'val_acc'])
-model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
+model_final.compile(optimizer=Adam(lr=1e-6), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
 
 # lr: float >= 0. Learning rate.
 # beta_1: float, 0 < beta < 1. Generally close to 1.
@@ -479,6 +503,20 @@ validation_generator = val_datagen.flow_from_directory(
 
 
 
+# https://datascience.stackexchange.com/questions/13490/how-to-set-class-weights-for-imbalanced-classes-in-keras
+# This works with a generator or standard. Your largest class will have a weight of 1 while the others will have values greater than 1 relative to the largest class. class weights accepts a dictionary type inpu
+
+# if (weightClasses):
+
+from collections import Counter
+itemCt = Counter(train_generator.classes)
+maxCt = float(max(itemCt.values()))
+class_weight = {clsID : math.log(maxCt/numImg)+1 for clsID, numImg in itemCt.items()}
+ # else:
+ #    class_weight = dict{}
+
+
+
 # show class indices
 print('****************')
 for cls, idx in train_generator.class_indices.items():
@@ -496,10 +534,10 @@ print('the size of val_dir is {}'.format(nb_validation_samples))
 
 
 # Save the model according to the conditions
-checkpoint = ModelCheckpoint("../FlickrCNN/TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=5)
+checkpoint = ModelCheckpoint("../FlickrCNN/TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=5)
 
 
-early = EarlyStopping(monitor='val_acc', min_delta=0, patience=10, verbose=1, mode='auto')
+early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=10, verbose=1, mode='auto')
 
 # steps per epoch depends on the batch size
 steps_per_epoch = int(np.ceil(nb_train_samples / batch_size))
@@ -532,7 +570,9 @@ history = model_final.fit_generator(
     epochs = epochs,
     validation_data = validation_generator,
     validation_steps = validation_steps_per_epoch,
-    callbacks = [checkpoint, early]) # , callback_tb
+    callbacks = [checkpoint, early],
+    class_weight = class_weight
+)
 
 
 
@@ -546,7 +586,7 @@ history_df = pd.DataFrame(history.history)
 history_df.to_csv('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.csv')
 
 acc = history.history['acc']
-val_acc = history.history['val_acc']
+val_acc = history.history['val_accuracy']
 loss = history.history['loss']
 val_loss = history.history['val_loss']
 

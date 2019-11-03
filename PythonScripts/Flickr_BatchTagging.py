@@ -54,24 +54,25 @@ from shutil import copyfile
 
 default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 
-# modelname = "InceptionResnetV2_dropout30"
-# dataname = "FlickrCR_Photos_All"
-# model_json = 'Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json'
+#modelname = "InceptionResnetV2_dropout30"
+#dataname = "FlickrCR_Photos_All"
+#model_json = 'Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json'
 # trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_44classes_finetuning_iterative_first_val_acc0.76.h5'
-# photo_path_base = '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
-# out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
-#
+#photo_path_base = '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
+#out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
+#trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_fourth_val_acc0.84.h5'
+
 
 modelname = "InceptionResnetV2_dropout50"
 dataname = "FlickrSeattle_Photos_All"
 model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_nodropout.json"
-#photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle' # FlickrSeattle_Photos_Flickr_All/'
-photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
+# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+#
+# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5"
+trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
 
-trained_weights = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5"
-
-out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Sep2019/Flickr2/"
-
+out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
 
 #  modelname = "InceptionResnetV2_dropout30"
 # dataname = "Korea"
@@ -87,7 +88,7 @@ os.chdir(default_path)
 
 out_path = out_path_base + modelname + "/" + dataname + "/"
 
-prediction_batch_size = 92  # to increase the speed of tagging .
+prediction_batch_size = 32  # to increase the speed of tagging .
 # number of images for one batch prediction
 
 # Class #0 = backpacking
@@ -185,9 +186,54 @@ classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "floo
 #
 # classes = ["Amur hedgehog", "Birds", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Human", "Korean hare",
 #           "Leopard cat", "Marten", "No animal", "Racoon dog", "Red squirrel", "Rodentia", "Roe dear", "Siberian weasel",
-#           "Water deer", "Wild boar", "Unidentified"]
+          # "Water deer", "Wild boar", "Unidentified"]
 # None
 
+#
+# Found 4933 images belonging to 30 classes.
+# Found 2139 images belonging to 30 classes.
+# ****************
+# Class #0 = Amphibians
+# Class #1 = Beach
+# Class #2 = Bicycles
+# Class #3 = Birds
+# Class #4 = Boat tours
+# Class #5 = Bustravel
+# Class #6 = Canoe
+# Class #7 = Cows
+# Class #8 = Diving
+# Class #9 = Dog walking
+# Class #10 = Fishing
+# Class #11 = Flowers
+# Class #12 = Horses
+# Class #13 = Insects
+# Class #14 = Landscape
+# Class #15 = Mammals
+# Class #16 = Miscellanous
+# Class #17 = Monkeys Sloths
+# Class #18 = Motorcycles
+# Class #19 = Pplnoactivity
+# Class #20 = Rafting
+# Class #21 = Reptiles
+# Class #22 = Surfing
+# Class #23 = Swimming
+# Class #24 = Trees - leafs
+# Class #25 = Volcano
+# Class #26 = Waterfall
+# Class #27 = Whalewatching
+# Class #28 = Ziplining
+# Class #29 = boat other
+# ****************
+
+
+# classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
+#            "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
+#            "Horses", "Insects", "Landscapes", "Mammals",
+#            "Miscellaneous",
+#            "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
+#            "Surfing",
+#            "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
+#            "boat other"]
 
 classes_arr = np.array(classes)
 # # Imagenet class labels
@@ -224,7 +270,7 @@ predictions_new = Dense(num_classes, activation='softmax', name='softmax')(x)
 model_trained = Model(inputs=model_trained.input, outputs=predictions_new)
 
 # Load weights into the new model
-model_trained.load_weights(trained_weights)
+model_trained.load_weights(trainedweights_name)
 
 
 def onlyfolders(path):
