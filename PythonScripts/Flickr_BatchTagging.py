@@ -54,30 +54,32 @@ from shutil import copyfile
 
 default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 
-#modelname = "InceptionResnetV2_dropout30"
-#dataname = "FlickrCR_Photos_All"
-#model_json = 'Model/InceptionResnetV2_retrain_costarica_architecture_dropout30.json'
-# trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_44classes_finetuning_iterative_first_val_acc0.76.h5'
-#photo_path_base = '/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/'
-#out_path_base = "/DATA2TB/FlickrCR_Tagging_Sep2019/"
-#trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_fourth_val_acc0.84.h5'
+modelname = "InceptionResnetV2_dropout30"
+dataname = "FlickrCR_Photos_All"
+model_json = "Model/InceptionResnetV2_retrain_CostaRica_architecture_dropout0.3.json"
+photo_path_base = '/DATA2TB/FlickrCR_download/Nov2019_V1_Photo/'
+out_path_base = "/DATA2TB/FlickrCR_Tagging_Nov2019/"
+
+trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_fourth_val_acc0.84.h5'
+# trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
 
 
-modelname = "InceptionResnetV2_dropout50"
-dataname = "FlickrSeattle_Photos_All"
-model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_nodropout.json"
-photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
-# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+# dataname = "FlickrSeattle_Photos_All"
+# model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
+# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
+# # photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
 #
-# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5"
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
+# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5"
+# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
+#
+# out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
+#
 
-out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
 
 #  modelname = "InceptionResnetV2_dropout30"
 # dataname = "Korea"
 # model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout30.json'
-# trained_weights = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.69.h5'
+# trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.69.h5'
 # photo_path_base = '/DATA2TB/CameraTraps_Korea/Unlabelled/'
 # out_path_base = "/DATA2TB/CameraTraps_Korea/Tagging2019/"
 
@@ -124,9 +126,9 @@ prediction_batch_size = 32  # to increase the speed of tagging .
 # Class #12 = rock climbing
 # Class #13 = swimming
 # Class #14 = trailrunning
-classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
-           "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
-           "trailrunning"]
+# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
+#            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
+#            "trailrunning"]
 
 # ****************
 # Class #0 = Amphibians
@@ -186,7 +188,7 @@ classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "floo
 #
 # classes = ["Amur hedgehog", "Birds", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Human", "Korean hare",
 #           "Leopard cat", "Marten", "No animal", "Racoon dog", "Red squirrel", "Rodentia", "Roe dear", "Siberian weasel",
-          # "Water deer", "Wild boar", "Unidentified"]
+#           "Water deer", "Wild boar", "Unidentified"]
 # None
 
 #
@@ -226,14 +228,14 @@ classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "floo
 # ****************
 
 
-# classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
-#            "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
-#            "Horses", "Insects", "Landscapes", "Mammals",
-#            "Miscellaneous",
-#            "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
-#            "Surfing",
-#            "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
-#            "boat other"]
+classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
+           "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
+           "Horses", "Insects", "Landscapes", "Mammals",
+           "Miscellaneous",
+           "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
+           "Surfing",
+           "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
+           "boat other"]
 
 classes_arr = np.array(classes)
 # # Imagenet class labels
@@ -257,7 +259,7 @@ from keras.models import model_from_json
 # Load the retrained CNN model
 
 # Model reconstruction from JSON file
-#with open(model_json, 'r') as f:
+# with open(model_json, 'r') as f:
 #    model_trained = model_from_json(f.read())
 
 

@@ -40,8 +40,8 @@ import os
 # import cv2
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
-os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
-# os.environ['HIP_VISIBLE_DEVICES'] = '0'
+#os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
+os.environ['HIP_VISIBLE_DEVICES'] = '0'
 #
 
 import csv
@@ -96,6 +96,9 @@ import split_utils
 from keras.applications import inception_resnet_v2
 
 
+from collections import Counter
+
+
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
@@ -137,20 +140,20 @@ sitename = "Seattle"
 #sitename = "CostaRica"
 
 multiGPU = False
-dropout = 0.5
+dropout = 0.3
 
 addingClasses = False
 num_classes_prev = 16
 
 
-loadWeights = False
+loadWeights = True
 #trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
 trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
 
-num_layers_train = 3
+num_layers_train = 4
 
 
-batch_size = 513     # proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
+batch_size = 32     # usually the larger is better. Often set proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
 val_batch_size = batch_size
 epochs = 100
 
@@ -336,7 +339,6 @@ else:
 ## load trained weights
 if loadWeights:
 
-
     ## load previously trained weights (old class number)
     model_final.load_weights(trainedweights_name)
 
@@ -377,7 +379,7 @@ if multiGPU:
 # Need to recompile the model for these modifications to take effect
 # Compile the final model using an Adam optimizer, with a low learning rate (since we are 'fine-tuning')
 #model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy', 'loss', 'val_acc'])
-model_final.compile(optimizer=Adam(lr=1e-6), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
+model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
 
 # lr: float >= 0. Learning rate.
 # beta_1: float, 0 < beta < 1. Generally close to 1.
@@ -470,7 +472,7 @@ train_datagen = ImageDataGenerator(
     horizontal_flip = True,
     fill_mode = "nearest",
     zoom_range = 0.3,
-    brightness_range = [0.3, 1],
+    brightness_range = [0.7,1.0],
     width_shift_range = 0.3,
     height_shift_range=0.3,
     rotation_range=30)
@@ -482,7 +484,7 @@ val_datagen = ImageDataGenerator(
     horizontal_flip = True,
     fill_mode = "nearest",
     zoom_range = 0.3,
-    brightness_range=[0.3, 1],
+    brightness_range= [0.7, 1.0],
     width_shift_range = 0.3,
     height_shift_range=0.3,
     rotation_range=30)
@@ -508,7 +510,6 @@ validation_generator = val_datagen.flow_from_directory(
 
 # if (weightClasses):
 
-from collections import Counter
 itemCt = Counter(train_generator.classes)
 maxCt = float(max(itemCt.values()))
 class_weight = {clsID : math.log(maxCt/numImg)+1 for clsID, numImg in itemCt.items()}
@@ -570,8 +571,10 @@ history = model_final.fit_generator(
     epochs = epochs,
     validation_data = validation_generator,
     validation_steps = validation_steps_per_epoch,
-    callbacks = [checkpoint, early],
-    class_weight = class_weight
+    callbacks = [checkpoint, early]
+    # , class_weight = class_weight # Optional dictionary mapping class indices (integers) to a weight (float) value,
+                                # used for weighting the loss function (during training only). This can be useful to
+                                # tell the model to "pay more attention" to samples from an under-represented class.
 )
 
 
@@ -585,7 +588,7 @@ model_final.save('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_' + site
 history_df = pd.DataFrame(history.history)
 history_df.to_csv('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.csv')
 
-acc = history.history['acc']
+acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
 loss = history.history['loss']
 val_loss = history.history['val_loss']
