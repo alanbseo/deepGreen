@@ -55,25 +55,38 @@ from shutil import copyfile
 default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 
 modelname = "InceptionResnetV2_dropout30"
+
+
 dataname = "FlickrCR_Photos_All"
 model_json = "Model/InceptionResnetV2_retrain_CostaRica_architecture_dropout0.3.json"
-photo_path_base = '/DATA2TB/FlickrCR_download/Nov2019_V1_Photo/'
+photo_path_base = '/DATA2TB/FlickrCR_download/Nov2019_V2_Photo/'
 out_path_base = "/DATA2TB/FlickrCR_Tagging_Nov2019/"
 
 trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_fourth_val_acc0.84.h5'
 # trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
+classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
+           "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
+           "Horses", "Insects", "Landscapes", "Mammals",
+           "Miscellaneous",
+           "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
+           "Surfing",
+           "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
+           "boat other"]
 
 
 # dataname = "FlickrSeattle_Photos_All"
 # model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
 # photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
 # # photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
-#
-# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Sep2019_val_acc0.88.h5"
-# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
-#
+# #
+# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
+# #
 # out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
-#
+# #
+# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
+#            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
+#            "trailrunning"]
 
 
 #  modelname = "InceptionResnetV2_dropout30"
@@ -84,8 +97,6 @@ trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_r
 # out_path_base = "/DATA2TB/CameraTraps_Korea/Tagging2019/"
 
 
-
-
 os.chdir(default_path)
 
 out_path = out_path_base + modelname + "/" + dataname + "/"
@@ -93,24 +104,7 @@ out_path = out_path_base + modelname + "/" + dataname + "/"
 prediction_batch_size = 32  # to increase the speed of tagging .
 # number of images for one batch prediction
 
-# Class #0 = backpacking
-# Class #1 = birdwatching
-# Class #2 = boating
-# Class #3 = camping
-# Class #4 = fishing
-# Class #5 = flooding
-# Class #6 = hiking
-# Class #7 = horseriding
-# Class #8 = hotsprings
-# Class #9 = mtn_biking
-# Class #10 = noactivity
-# Class #11 = otheractivities
-# Class #12 = pplnoactivity
-# Class #13 = rock climbing
-# Class #14 = swimming
-# Class #15 = trailrunning
-# # ****************
-#
+
 # Class #0 = backpacking
 # Class #1 = birdwatching
 # Class #2 = boating
@@ -126,9 +120,7 @@ prediction_batch_size = 32  # to increase the speed of tagging .
 # Class #12 = rock climbing
 # Class #13 = swimming
 # Class #14 = trailrunning
-# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
-#            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
-#            "trailrunning"]
+
 
 # ****************
 # Class #0 = Amphibians
@@ -228,14 +220,6 @@ prediction_batch_size = 32  # to increase the speed of tagging .
 # ****************
 
 
-classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
-           "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
-           "Horses", "Insects", "Landscapes", "Mammals",
-           "Miscellaneous",
-           "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
-           "Surfing",
-           "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
-           "boat other"]
 
 classes_arr = np.array(classes)
 # # Imagenet class labels
@@ -287,12 +271,18 @@ def onlyfiles(path):
             yield file
 
 
+
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 foldernames = os.listdir(photo_path_base)
 
 foldername = foldernames[0]
 
-for foldername in foldernames:
+for f_idx in range(87, len(foldernames)):
 
+    foldername = foldernames[f_idx]
+    print(f_idx)
     print(foldername)
     photo_path_aoi = photo_path_base + "/" + foldername
 
@@ -338,6 +328,7 @@ for foldername in foldernames:
         images = []
 
         for img_name in filenames_batch:
+            print(img_name)
             img_name = os.path.join(photo_path_aoi, img_name)
 
             # load an image in PIL format
@@ -377,12 +368,12 @@ for foldername in foldernames:
         top_classes_probs_arr[0, :]
 
         predicted_class_v = top_classes_arr[:, 0]
-        print('Predicted:', predicted_class_v)
+        #print('Predicted:', predicted_class_v)
 
 
         # kind of equivalent to `sapply()' in R
         def foo_get_predicted_filename(x):
-            return (out_path + "Result/" + modelname + "/OriginalPhotos/" + foldername + "/" + x)
+            return (out_path + "Result/" + modelname + "/ClassifiedPhotos/" + foldername + "/" + x)
 
 
         predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v))
