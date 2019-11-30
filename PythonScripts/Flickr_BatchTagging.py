@@ -57,36 +57,36 @@ default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 modelname = "InceptionResnetV2_dropout30"
 
 
-dataname = "FlickrCR_Photos_All"
-model_json = "Model/InceptionResnetV2_retrain_CostaRica_architecture_dropout0.3.json"
-photo_path_base = '/DATA2TB/FlickrCR_download/Nov2019_V2_Photo/'
-out_path_base = "/DATA2TB/FlickrCR_Tagging_Nov2019/"
+# dataname = "FlickrCR_Photos_All"
+# model_json = "Model/InceptionResnetV2_retrain_CostaRica_architecture_dropout0.3.json"
+# photo_path_base = '/DATA2TB/FlickrCR_download/Nov2019_V2_Photo/'
+# out_path_base = "/DATA2TB/FlickrCR_Tagging_Nov2019/"
+#
+# trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_fourth_val_acc0.84.h5'
+# # trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
+# classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
+#            "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
+#            "Horses", "Insects", "Landscapes", "Mammals",
+#            "Miscellaneous",
+#            "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
+#            "Surfing",
+#            "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
+#            "boat other"]
 
-trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_fourth_val_acc0.84.h5'
-# trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
-classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
-           "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
-           "Horses", "Insects", "Landscapes", "Mammals",
-           "Miscellaneous",
-           "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
-           "Surfing",
-           "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
-           "boat other"]
 
-
-# dataname = "FlickrSeattle_Photos_All"
-# model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
-# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
-# # photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
-# #
+dataname = "FlickrSeattle_Photos_All"
+model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
+photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
+# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+#
 # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
-# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
-# #
-# out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
-# #
-# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
-#            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
-#            "trailrunning"]
+trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
+#
+out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
+#
+classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
+           "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
+           "trailrunning"]
 
 
 #  modelname = "InceptionResnetV2_dropout30"
@@ -279,7 +279,7 @@ foldernames = os.listdir(photo_path_base)
 
 foldername = foldernames[0]
 
-for f_idx in range(87, len(foldernames)):
+for f_idx in range(0, len(foldernames)):
 
     foldername = foldernames[f_idx]
     print(f_idx)

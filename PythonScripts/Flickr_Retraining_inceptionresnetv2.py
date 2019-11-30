@@ -153,7 +153,7 @@ trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_ret
 num_layers_train = 4
 
 
-batch_size = 32     # usually the larger is better. Often set proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
+batch_size = 256     # usually the larger is better. Often set proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
 val_batch_size = batch_size
 epochs = 100
 
