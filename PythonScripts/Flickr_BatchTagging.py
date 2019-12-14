@@ -17,17 +17,6 @@ import keras_utils
 
 requests.packages.urllib3.disable_warnings()
 
-import ssl
-
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    # Legacy Python that doesn't verify HTTPS certificates by default
-    pass
-else:
-    # Handle target environment that doesn't support HTTPS verification
-    ssl._create_default_https_context = _create_unverified_https_context
-
 from keras.applications import inception_resnet_v2
 from keras.applications.inception_resnet_v2 import decode_predictions
 
@@ -73,28 +62,116 @@ modelname = "InceptionResnetV2_dropout30"
 #            "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
 #            "boat other"]
 
+# Seattle
+# dataname = "FlickrSeattle_Photos_All"
+# model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
+# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
+# # photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+# #
+# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
+# #
+# out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
+# #
+# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
+#            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
+#            "trailrunning"]
 
-dataname = "FlickrSeattle_Photos_All"
-model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
-photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
-# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
-#
+
+# Saxony
+#dataname = "FlickrSaxnony"
+#model_json = "Model/InceptionResnetV2_retrain_Saxony_architecture_dropout0.3.json"
+#photo_path_base = '/DATA2TB/FlickrEU_Jan2019_V1_Photo_Sachsen'
+ #
 # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
+#trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Saxony_retrain_19classes_Dec2019_val_acc0.77.h5"
 #
-out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
+#out_path_base = "/DATA2TB/FlickrSaxony_Tagging_Dec2019/"
 #
-classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
-           "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
-           "trailrunning"]
+#classes = ["aesthetic landscape", "climbing", "cycling", "hiking", "horseback Riding", "nature appreciation", "water-related activities",
+#           "winter sports", "non-CES"]
+
+# Class #0 = Aesthetic Landscape
+# Class #1 = Climbing
+# Class #2 = Cycling
+# Class #3 = Hiking
+# Class #4 = Horseback Riding
+# Class #5 = Nature Appreciation
+# Class #6 = Water-Related Activities
+# Class #7 = Winter Sports
+# Class #8 = non-CES
+
+#classes = ["ball sports", "birds", "camping", "cars", "climbing", "cycling", "dog walking", "hiking", "horseback Riding", "landscape",
+          # "mammals", "motocycles", "nature", "noactivity", "otheractivities", "pplnoactivity", "reptiles", "water",
+           #"winter sports"]
+#
+# ****************
+# Class #0 = ball sports
+# Class #1 = birds
+# Class #2 = camping
+# Class #3 = cars
+# Class #4 = climbing
+# Class #5 = cycling
+# Class #6 = dog walking
+# Class #7 = hiking
+# Class #8 = horseback riding
+# Class #9 = landscape
+# Class #10 = mammals
+# Class #11 = motorcycles
+# Class #12 = nature
+# Class #13 = noactivity
+# Class #14 = otheractivities
+# Class #15 = pplnoactivity
+# Class #16 = reptiles
+# Class #17 = water
+# Class #18 = winter sports
+# ****************
 
 
-#  modelname = "InceptionResnetV2_dropout30"
-# dataname = "Korea"
-# model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout30.json'
+# Korea
+dataname = "Korea"
+model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout0.2.json'
+photo_path_base = '/DATA2TB/CameraTraps_Korea/'
+
 # trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.69.h5'
-# photo_path_base = '/DATA2TB/CameraTraps_Korea/Unlabelled/'
-# out_path_base = "/DATA2TB/CameraTraps_Korea/Tagging2019/"
+trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_Dec2019_val_acc0.62.h5"
+#
+out_path_base = "/DATA2TB/CameraTraps_Korea_Tagging2019_v3/"
+#
+
+
+classes = ["Amur hedgehog", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Korean hare",
+           "Marten", "No animal", "Red squirrel", "Rodentia",   "Siberian weasel", "Birds", "Human", "Leopard cat",
+           "Racoon dog", "Roe dear", "Unidentified", "Water deer", "Wild boar"]
+#
+# #
+# Found 7455 images belonging to 21 classes.
+# Found 3211 images belonging to 21 classes.
+# ****************
+# Class #0 = Amur hedgehog
+# Class #1 = Car
+# Class #2 = Cat
+# Class #3 = Chipmunk
+# Class #4 = Dog
+# Class #5 = Eurasian badger
+# Class #6 = Goral
+# Class #7 = Korean hare
+# Class #8 = Marten
+# Class #9 = No animal
+# Class #10 = Red squirrel
+# Class #11 = Rodentia
+# Class #12 = Siberian weasel
+# Class #13 = birds
+# Class #14 = human
+# Class #15 = leopard cat
+# Class #16 = racoon dog
+# Class #17 = roe dear
+# Class #18 = unidentified
+# Class #19 = water deer
+# Class #20 = wild boar
+# ****************
+
+
 
 
 os.chdir(default_path)
@@ -103,6 +180,8 @@ out_path = out_path_base + modelname + "/" + dataname + "/"
 
 prediction_batch_size = 32  # to increase the speed of tagging .
 # number of images for one batch prediction
+
+top = 10  # 10  print top-n classes
 
 
 # Class #0 = backpacking
@@ -178,10 +257,6 @@ prediction_batch_size = 32  # to increase the speed of tagging .
 #            "Swimming", "Tourgroups", "Trailrunning", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
 #            "otheractivities"]
 #
-# classes = ["Amur hedgehog", "Birds", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Human", "Korean hare",
-#           "Leopard cat", "Marten", "No animal", "Racoon dog", "Red squirrel", "Rodentia", "Roe dear", "Siberian weasel",
-#           "Water deer", "Wild boar", "Unidentified"]
-# None
 
 #
 # Found 4933 images belonging to 30 classes.
@@ -234,7 +309,6 @@ classes_arr = np.array(classes)
 
 num_classes = len(classes)
 
-top = 10  # choose top-n classes
 
 ##### Predict
 
@@ -258,6 +332,8 @@ model_trained = Model(inputs=model_trained.input, outputs=predictions_new)
 # Load weights into the new model
 model_trained.load_weights(trainedweights_name)
 
+# model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
+
 
 def onlyfolders(path):
     for file in os.listdir(path):
@@ -277,7 +353,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 foldernames = os.listdir(photo_path_base)
 
-foldername = foldernames[0]
+# f_idx = 0
 
 for f_idx in range(0, len(foldernames)):
 
@@ -345,7 +421,7 @@ for f_idx in range(0, len(foldernames)):
         # stack up images list to pass for prediction
         predictions = model_trained.predict(images_vstack, batch_size=bsize_tmp)
 
-        predictions.shape
+        # predictions.shape
 
         ## top selected classes
         top_classes_idx_arr = np.argsort(predictions)[:, ::-1][:, :top]
@@ -367,13 +443,16 @@ for f_idx in range(0, len(foldernames)):
         top_classes_arr[0, :]
         top_classes_probs_arr[0, :]
 
-        predicted_class_v = top_classes_arr[:, 0]
+        predicted_class_v = top_classes_arr[:, 0] # top1
+        predicted_class_top2_v = top_classes_arr[:, 1] # top2
+
         #print('Predicted:', predicted_class_v)
 
 
         # kind of equivalent to `sapply()' in R
         def foo_get_predicted_filename(x):
-            return (out_path + "Result/" + modelname + "/ClassifiedPhotos/" + foldername + "/" + x)
+            # return (out_path + "Result/" + modelname + "/ClassifiedPhotos/" + foldername + "/" + x)
+            return (out_path + "Result/" + "/ClassifiedPhotos/" + "/" + x)
 
 
         predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v))
@@ -387,11 +466,12 @@ for f_idx in range(0, len(foldernames)):
         for i in range(0, bsize_tmp):
 
             save_folder = predicted_filenames[i]
+            print(save_folder)
 
             if not (os.path.exists(save_folder)):
                 os.makedirs(save_folder, exist_ok=False)
 
-            copyfile(filenames_batch[i], predicted_filenames[i] + '/' + os.path.basename(filenames_batch[i]))
+            copyfile(filenames_batch[i], predicted_filenames[i] + '/' + os.path.basename(filenames_batch[i]) )
 
         arr_tmp = pd.DataFrame(np.concatenate((top_classes_arr, top_classes_probs_arr), axis=1))
 

@@ -82,10 +82,10 @@ close(apikey_con)
 # mindate <- "2005-01-01"
 # maxdate <- "2019-10-31"
 # savedir <- substr(mindate, 6, 10)
-# workdir <-  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/"
-workdir <-  "~/Dropbox/KIT/FlickrEU/Costa Rica_Data/FlickrCR_download/"
+workdir <-  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/"
+# workdir <-  "~/Dropbox/KIT/FlickrEU/Costa Rica_Data/FlickrCR_download/"
 
-savedir <- "Nov2019_V2/"
+savedir <- "Dec2019_V3/"
 
 gisdir = "../GIS data"
 
@@ -96,15 +96,15 @@ gisdir = "../GIS data"
 # photodir <- paste0("/POCO2TB/DATA2TB/FlickrEU_download/Jan2019_V1_Photo_small/")
 # photodir <- paste0("~/Downloads/Jan2019_V1_Photo_Y2018_Part1/")
 # photodir <- paste0("/Users/seo-b/nfs_keal_pd/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photo_small/")
-photodir <- paste0("/DATA2TB/FlickrCR_download/Nov2019_V2_Photo/")
-# photodir <-  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos"
+# photodir <- paste0("/DATA2TB/FlickrCR_download/Nov2019_V2_Photo/")
+photodir <-  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos"
 
 
 # Search parameters
-max.perpage <- 250 # number per page maximum 250
+# max.perpage <- 250 # number per page maximum 250
 
-aoi.poly.in = readOGR( dsn = paste0(workdir, gisdir), layer = "FlickrCR_AOI_Nov2019")
-# aoi.poly.in = readOGR( dsn = paste0(  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/"), layer = "middlefork_AOI")  
+# aoi.poly.in = readOGR( dsn = paste0(workdir, gisdir), layer = "FlickrCR_AOI_Nov2019")
+aoi.poly.in = readOGR( dsn = paste0(  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/"), layer = "middlefork_AOI")
 
 n.points <- length(aoi.poly.in)
 
@@ -188,8 +188,8 @@ Sys.setlocale(category = "LC_ALL", "en_US.UTF-8")
 # target.ids <- readRDS("Bayern_aoiid.Rds")
 # target.ids <- 13225:16370 # Bayern 
  
-target.ids.all <- aoi.poly.in$CELL_ID
- 
+# target.ids.all <- aoi.poly.in$CELL_ID
+target.ids.all = 1 
 foreach (i = 1:n.points, .inorder = F, .errorhandling = "stop", .verbose = F) %do% { 
     
     

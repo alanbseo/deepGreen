@@ -39,11 +39,11 @@ hashtag <- "" # Set "" for all hashtags
 
 # Time span
 mindate <- "2005-01-01"
-maxdate <- "2019-11-11"
+maxdate <- "2019-12-11"
 # savedir <- substr(mindate, 6, 10)
-savedir <- "Nov2019_V2/"
-# workdir <- "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/"
-workdir <-  "~/Dropbox/KIT/FlickrEU/Costa Rica_Data/FlickrCR_download/"
+savedir <- "Dec2019_V3/"
+workdir <- "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/"
+# workdir <-  "~/Dropbox/KIT/FlickrEU/Costa Rica_Data/FlickrCR_download/"
 gisdir = "../GIS data"
 
 if (!dir.exists(paste0(workdir, savedir, "/Xlsx"))) { 
@@ -53,12 +53,12 @@ if (!dir.exists(paste0(workdir, savedir, "/Xlsx"))) {
 }
 
 
-aoi.poly.in = readOGR( dsn = paste0(workdir, gisdir), layer = "FlickrCR_AOI_Nov2019")
-# aoi.poly.in = readOGR( dsn = paste0(  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/"), layer = "middlefork_AOI")  
+# aoi.poly.in = readOGR( dsn = paste0(workdir, gisdir), layer = "FlickrCR_AOI_Nov2019")
+aoi.poly.in = readOGR( dsn = paste0(  "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/"), layer = "middlefork_AOI")
 
 
 # Search parameters
-sort <- "" # "date-posted-desc" # "date-taken-asc" # "interestingness-desc" # Sort by Interestingness (or: relevance)
+sort <- "date-taken-asc" # "date-posted-desc" # "date-taken-asc" # "interestingness-desc" # Sort by Interestingness (or: relevance)
 max.perpage <- 250 # number per page maximum 250
 n.points <- length(aoi.poly.in)
 # n.points <- 10
@@ -85,8 +85,8 @@ registerDoMC(n.thread)
 # Retreiving the data
 
 
-# target.ids.all <- 1:n.points # seattle
-target.ids.all <- aoi.poly.in$CELL_ID # costa rica
+target.ids.all <- 1:n.points # seattle
+# target.ids.all <- aoi.poly.in$CELL_ID # costa rica
 
 aois.done <- list.files(paste0(workdir, "/", savedir, "/Xlsx"), pattern = "^AOI.*.\\.xlsx$")
 aois.done.v <- (as.numeric(sapply(aois.done, FUN = function(x)  (str_split(x, pattern = "_")[[1]][3]))))

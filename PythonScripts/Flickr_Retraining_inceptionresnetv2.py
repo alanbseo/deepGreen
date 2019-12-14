@@ -40,8 +40,8 @@ import os
 # import cv2
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
-#os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
-os.environ['HIP_VISIBLE_DEVICES'] = '0'
+os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
+# os.environ['HIP_VISIBLE_DEVICES'] = '0'
 #
 
 import csv
@@ -124,42 +124,47 @@ from keras.backend.common import set_floatx
 #k.config.optimizer.set_jit(True)
 
 img_width, img_height = 331, 331
+# img_width, img_height = 662, 662
 
 # nb_train_samples = 210
 # nb_validation_samples = 99
 
 # train_data_dir = "../LabelledData/Costa Rica/Training data_4_edited by Torben for second loop/"
 # validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
-# train_data_dir = "../LabelledData/Korea/Korea_CameraTrapPhotos/"
-train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
+train_data_dir = "../LabelledData/Korea/Korea_AI_Dec2019_Training/"
+# train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
+# train_data_dir = "../LabelledData/Saxony/Saxony_Flickr_ABS_iterative/"
 
 
 
-# sitename = "Korea"
-sitename = "Seattle"
+sitename = "Korea"
+# sitename = "Seattle"
 #sitename = "CostaRica"
+# sitename = "Saxony"
 
-multiGPU = False
-dropout = 0.3
+multiGPU = False # @todo multigpu error..
+dropout = 0.2
 
 addingClasses = False
-num_classes_prev = 16
+num_classes_prev = 0 # when adding existing ..
 
+validation_split = 0.4 # % test photos
 
 loadWeights = True
 #trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
-
+#trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Saxony_retrain_19classes_Dec2019_val_acc0.75.h5"
+trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_Dec2019_val_acc0.62.h5"
 num_layers_train = 4
 
 
-batch_size = 256     # usually the larger is better. Often set proportional to the training sample size.. (64 did not work for Vega56 8GB, 128 did not work for Radeon7 16GB)
+batch_size = 511     # the larger is faster in training. Consider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
 val_batch_size = batch_size
 epochs = 100
 
+learning_rate = 1e-5
 
-
-## Correct for imbalanced data
+## Correction for imbalanced data
 # https://datascience.stackexchange.com/questions/13490/how-to-set-class-weights-for-imbalanced-classes-in-keras
 
 
@@ -169,8 +174,8 @@ epochs = 100
 # An epoch means the whole input dataset has been used for training the network. There are some heuristics to determine the maximum epoch. Also there is a way to stop the training based on the performance (callled  `Early stopping').
 
 
-# num_classes = 30
-num_classes = 15
+
+num_classes = 21
 
 # ____________________________________________________________________________________________
 # None
@@ -379,7 +384,7 @@ if multiGPU:
 # Need to recompile the model for these modifications to take effect
 # Compile the final model using an Adam optimizer, with a low learning rate (since we are 'fine-tuning')
 #model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy', 'loss', 'val_acc'])
-model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
+model_final.compile(optimizer=Adam(lr=learning_rate), loss='categorical_crossentropy', metrics=['accuracy', 'categorical_accuracy'])
 
 # lr: float >= 0. Learning rate.
 # beta_1: float, 0 < beta < 1. Generally close to 1.
@@ -451,13 +456,12 @@ model_final.compile(optimizer=Adam(lr=1e-5), loss='categorical_crossentropy', me
 # model.layers[-1].set_weights(weights_new)
 #
 
-print(model_final.summary())
+# print(model_final.summary())
 
 # Save the model architecture
-with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout' + '0.3' + '.json', 'w') as f:
+with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout' + '0.0' + '.json', 'w') as f:
     f.write(model_final.to_json())
 
-validation_split = 0.3
 
 # all data in train_dir and val_dir which are alias to original_data. (both dir is temporary directory)
 # don't clear base_dir, because this directory holds on temp directory.
@@ -538,7 +542,7 @@ print('the size of val_dir is {}'.format(nb_validation_samples))
 checkpoint = ModelCheckpoint("../FlickrCNN/TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=5)
 
 
-early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=10, verbose=1, mode='auto')
+early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
 
 # steps per epoch depends on the batch size
 steps_per_epoch = int(np.ceil(nb_train_samples / batch_size))
@@ -572,7 +576,7 @@ history = model_final.fit_generator(
     validation_data = validation_generator,
     validation_steps = validation_steps_per_epoch,
     callbacks = [checkpoint, early]
-    # , class_weight = class_weight # Optional dictionary mapping class indices (integers) to a weight (float) value,
+   , class_weight = class_weight # Optional dictionary mapping class indices (integers) to a weight (float) value,
                                 # used for weighting the loss function (during training only). This can be useful to
                                 # tell the model to "pay more attention" to samples from an under-represented class.
 )
