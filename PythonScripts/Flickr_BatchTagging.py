@@ -1,42 +1,20 @@
-import numpy as np
 import os
 
-import cv2
 import numpy as np
 import pandas as pd
-import pathlib
-import fnmatch
-
-import ssl
-
 ### Avoid certificat error (source: https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)
 import requests
-import json
-
-import keras_utils
 
 requests.packages.urllib3.disable_warnings()
 
 from keras.applications import inception_resnet_v2
-from keras.applications.inception_resnet_v2 import decode_predictions
-
-from keras.applications import inception_resnet_v2
-from keras.preprocessing import image
-from keras.preprocessing.image import load_img
-from keras.preprocessing.image import img_to_array
 
 from keras.preprocessing import image
-
-from keras import backend as k
-from PIL import ImageFont, ImageDraw, Image
 
 img_width, img_height = 331, 331
 from keras.layers import Dense, GlobalAveragePooling2D
-from keras.models import Sequential, Model
+from keras.models import Model
 
-import matplotlib.pyplot as plt
-
-import pathlib
 import fnmatch
 
 from shutil import copyfile
@@ -45,6 +23,10 @@ default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 
 modelname = "InceptionResnetV2_dropout30"
 
+
+#!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
+# os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
+os.environ['HIP_VISIBLE_DEVICES'] = '0'
 
 # dataname = "FlickrCR_Photos_All"
 # model_json = "Model/InceptionResnetV2_retrain_CostaRica_architecture_dropout0.3.json"
@@ -63,33 +45,33 @@ modelname = "InceptionResnetV2_dropout30"
 #            "boat other"]
 
 # Seattle
-# dataname = "FlickrSeattle_Photos_All"
-# model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
-# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/'
-# # photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
-# #
-# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+dataname = "FlickrSeattle_Photos_All"
+model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
+photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/NewTestPhotos'
+# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+#
+trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
 # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
-# #
-# out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Nov2019/"
-# #
-# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
-#            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
-#            "trailrunning"]
+#
+out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Feb2020/"
+#
+classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
+           "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
+           "trailrunning"]
+
+
+trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
 
 
 # Saxony
 #dataname = "FlickrSaxnony"
-#model_json = "Model/InceptionResnetV2_retrain_Saxony_architecture_dropout0.3.json"
-#photo_path_base = '/DATA2TB/FlickrEU_Jan2019_V1_Photo_Sachsen'
- #
-# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
-#trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Saxony_retrain_19classes_Dec2019_val_acc0.77.h5"
+#model_json = "Model/InceptionResnetV2_retrain_Saxony_architecture_dropout0.2.json"
+#photo_path_base = '/DATA2TB/FlickrEU_download/FlickrEU_Jan2019_V1_Photo_Sachsen'
+ #trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Saxony_retrain_19classes_Dec2019_val_acc0.85_3layers.h5"
+#out_path_base = "/DATA2TB/FlickrSaxony_Tagging_Dec2019_v3/"
 #
-#out_path_base = "/DATA2TB/FlickrSaxony_Tagging_Dec2019/"
-#
-#classes = ["aesthetic landscape", "climbing", "cycling", "hiking", "horseback Riding", "nature appreciation", "water-related activities",
-#           "winter sports", "non-CES"]
+# classes = ["aesthetic landscape", "climbing", "cycling", "hiking", "horseback Riding", "nature appreciation", "water-related activities",
+          # "winter sports", "non-CES"]
 
 # Class #0 = Aesthetic Landscape
 # Class #1 = Climbing
@@ -102,8 +84,8 @@ modelname = "InceptionResnetV2_dropout30"
 # Class #8 = non-CES
 
 #classes = ["ball sports", "birds", "camping", "cars", "climbing", "cycling", "dog walking", "hiking", "horseback Riding", "landscape",
-          # "mammals", "motocycles", "nature", "noactivity", "otheractivities", "pplnoactivity", "reptiles", "water",
-           #"winter sports"]
+#          "mammals", "motocycles", "nature", "noactivity", "otheractivities", "pplnoactivity", "reptiles", "water",
+#           "winter sports"]
 #
 # ****************
 # Class #0 = ball sports
@@ -129,51 +111,49 @@ modelname = "InceptionResnetV2_dropout30"
 
 
 # Korea
-dataname = "Korea"
-model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout0.2.json'
-photo_path_base = '/DATA2TB/CameraTraps_Korea/'
-
-# trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_iterative_sixth_val_acc_0.69.h5'
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_Dec2019_val_acc0.62.h5"
+# dataname = "Korea"
+# model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout0.2.json'
+# photo_path_base = '/DATA2TB/CameraTraps_Korea/Photos/NewCameraTrapPhotos_unlabelled_Dec2019'
 #
-out_path_base = "/DATA2TB/CameraTraps_Korea_Tagging2019_v3/"
-#
-
-
-classes = ["Amur hedgehog", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Goral", "Korean hare",
-           "Marten", "No animal", "Red squirrel", "Rodentia",   "Siberian weasel", "Birds", "Human", "Leopard cat",
-           "Racoon dog", "Roe dear", "Unidentified", "Water deer", "Wild boar"]
-#
+# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_26classes_Dec2019_val_acc0.74.h5"
+# #_Korea_21classes_Dec2019_val_acc0.65.h5"
 # #
-# Found 7455 images belonging to 21 classes.
-# Found 3211 images belonging to 21 classes.
+# out_path_base = "/DATA2TB/CameraTraps_Korea_Tagging2019_v5/"
+# #
+#
+#
+# classes = ["Amur hedgehog", "Bat", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Eurasian Otter", "Goral", "Korean hare",
+#            "Least weasel",
+#             "Marten", "Musk deer",  "No animal", "Red squirrel", "Rodentia",  "Flying squirrel",  "Siberian weasel", "Birds", "Human", "Leopard cat",
+#             "Racoon dog", "Roe dear", "Unidentified", "Water deer", "Wild boar"]
+# #
 # ****************
 # Class #0 = Amur hedgehog
-# Class #1 = Car
-# Class #2 = Cat
-# Class #3 = Chipmunk
-# Class #4 = Dog
-# Class #5 = Eurasian badger
-# Class #6 = Goral
-# Class #7 = Korean hare
-# Class #8 = Marten
-# Class #9 = No animal
-# Class #10 = Red squirrel
-# Class #11 = Rodentia
-# Class #12 = Siberian weasel
-# Class #13 = birds
-# Class #14 = human
-# Class #15 = leopard cat
-# Class #16 = racoon dog
-# Class #17 = roe dear
-# Class #18 = unidentified
-# Class #19 = water deer
-# Class #20 = wild boar
-# ****************
-
-
-
-
+# Class #1 = Bat
+# Class #2 = Car
+# Class #3 = Cat
+# Class #4 = Chipmunk
+# Class #5 = Dog
+# Class #6 = Eurasian badger
+# Class #7 = Eurasian otter
+# Class #8 = Goral
+# Class #9 = Korean hare
+# Class #10 = Least weasel
+# Class #11 = Marten
+# Class #12 = Musk deer
+# Class #13 = No animal
+# Class #14 = Red squirrel
+# Class #15 = Rodentia
+# Class #16 = Siberian flying squirrel
+# Class #17 = Siberian weasel
+# Class #18 = birds
+# Class #19 = human
+# Class #20 = leopard cat
+# Class #21 = racoon dog
+# Class #22 = roe dear
+# Class #23 = unidentified
+# Class #24 = water deer
+# Class #25 = wild boar
 os.chdir(default_path)
 
 out_path = out_path_base + modelname + "/" + dataname + "/"
@@ -312,8 +292,6 @@ num_classes = len(classes)
 
 ##### Predict
 
-from keras.models import model_from_json
-
 # Load the retrained CNN model
 
 # Model reconstruction from JSON file
@@ -449,13 +427,14 @@ for f_idx in range(0, len(foldernames)):
         #print('Predicted:', predicted_class_v)
 
 
+        # 2nd-level
         # kind of equivalent to `sapply()' in R
-        def foo_get_predicted_filename(x):
+        def foo_get_predicted_filename(x, x2):
             # return (out_path + "Result/" + modelname + "/ClassifiedPhotos/" + foldername + "/" + x)
-            return (out_path + "Result/" + "/ClassifiedPhotos/" + "/" + x)
+            return (out_path + "Result/" + "/ClassifiedPhotos/" + "/" + x + "/2ndClass_" +x2 )
 
 
-        predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v))
+        predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v, predicted_class_top2_v))
         save_folder_names = list(map(os.path.basename, predicted_filenames))
 
         # create necessary folders
@@ -494,9 +473,9 @@ for f_idx in range(0, len(foldernames)):
 
     df_aoi.columns = header
 
-    df_aoi.to_csv(name_csv, index=False, columns=header)
-
+ll
     # @todo attention map
+
 
 
 

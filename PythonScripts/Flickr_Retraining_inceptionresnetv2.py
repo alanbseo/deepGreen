@@ -33,15 +33,14 @@
 ## then launch python(3)...
 # python
 
-
 import keras
 # import numpy as np
 import os
 # import cv2
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
-os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
-# os.environ['HIP_VISIBLE_DEVICES'] = '0'
+#os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
+os.environ['HIP_VISIBLE_DEVICES'] = '0'
 #
 
 import csv
@@ -49,8 +48,6 @@ import pandas as pd
 import pathlib
 import fnmatch
 
-
-import ssl
 
 ### Avoid certificat error (source: https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)
 import requests
@@ -114,7 +111,7 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard,
 # k.set_floatx('float32')
 # k.set_epsilon(1e-6) #default is 1e-7
 
-from keras.backend.common import set_floatx
+# from keras.backend.common import set_floatx
 
 # set_floatx('float16')
 
@@ -125,42 +122,53 @@ from keras.backend.common import set_floatx
 
 img_width, img_height = 331, 331
 # img_width, img_height = 662, 662
-
+#
+# nb_train_samples = 210
 # nb_train_samples = 210
 # nb_validation_samples = 99
 
 # train_data_dir = "../LabelledData/Costa Rica/Training data_4_edited by Torben for second loop/"
 # validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
-train_data_dir = "../LabelledData/Korea/Korea_AI_Dec2019_Training/"
 # train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
-# train_data_dir = "../LabelledData/Saxony/Saxony_Flickr_ABS_iterative/"
 
+batch_size = 127    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
+val_batch_size = batch_size
+epochs = 100
 
+save_period = 1
 
-sitename = "Korea"
-# sitename = "Seattle"
-#sitename = "CostaRica"
-# sitename = "Saxony"
+multiGPU = False # @todo multiGPU error..
+validation_split = 0.4 # % test photos
 
-multiGPU = False # @todo multigpu error..
-dropout = 0.2
+dropout = 0.3
+
+loadWeights = True
 
 addingClasses = False
 num_classes_prev = 0 # when adding existing ..
 
-validation_split = 0.4 # % test photos
 
-loadWeights = True
-#trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
+# sitename = "Seattle"
 #trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
-# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Saxony_retrain_19classes_Dec2019_val_acc0.75.h5"
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_21classes_Dec2019_val_acc0.62.h5"
+
+#sitename = "CostaRica"
+#trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
+
+
+
+#sitename = "Saxony"
+#train_data_dir = "../LabelledData/Saxony/Saxony_Flickr_ABS_iterative/"
+#trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Saxony_retrain_19classes_Dec2019_val_acc0.83_2layers.h5"
+#num_layers_train = 3
+
+
+sitename = "Korea"
+train_data_dir = "../LabelledData/Korea/Korea_AI_Dec2019_Training/"
+trainedweights_name = "../TrainedWeights/InceptionResnetV2_retrain_Korea_26classes_Dec2019_val_acc0.74.h5"
+# trainedweights_names = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea.h5"
 num_layers_train = 4
 
 
-batch_size = 511     # the larger is faster in training. Consider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
-val_batch_size = batch_size
-epochs = 100
 
 learning_rate = 1e-5
 
@@ -175,7 +183,7 @@ learning_rate = 1e-5
 
 
 
-num_classes = 21
+num_classes = 26
 
 # ____________________________________________________________________________________________
 # None
@@ -539,7 +547,7 @@ print('the size of val_dir is {}'.format(nb_validation_samples))
 
 
 # Save the model according to the conditions
-checkpoint = ModelCheckpoint("../FlickrCNN/TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=5)
+checkpoint = ModelCheckpoint("../TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=save_period)
 
 
 early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
@@ -586,11 +594,11 @@ history = model_final.fit_generator(
 # at this point, the unfreezed layers are well trained.
 
 # Save the model
-model_final.save('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.h5')
+model_final.save('../TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.h5')
 
 # save training history
 history_df = pd.DataFrame(history.history)
-history_df.to_csv('../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.csv')
+history_df.to_csv('../TrainedWeights/InceptionResnetV2_retrain_' + sitename + '.csv')
 
 acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
