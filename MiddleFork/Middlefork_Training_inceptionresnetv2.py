@@ -6,7 +6,6 @@
 #
 # The amount of data required for training is not much because of two reasons. First, we are not training the entire network. Second, the part that is being trained is not trained from scratch.
 # Since the parameters that need to be updated is less, the amount of time needed will also be less.
-#
 
 
 # Ref:
@@ -39,9 +38,7 @@ import os
 # import cv2
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
-#os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
-os.environ['HIP_VISIBLE_DEVICES'] = '0'
-#
+os.environ['HIP_VISIBLE_DEVICES'] = '0' # For AMD GPU
 
 import csv
 import pandas as pd
@@ -86,15 +83,12 @@ import math
 
 default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
 os.chdir(default_path)
-# photo_path = default_path + '/Photos_168_retraining'
 
-# split utils from the web
+# split utils (@TODO reference)
 import split_utils
 from keras.applications import inception_resnet_v2
 
-
 from collections import Counter
-
 
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
@@ -107,70 +101,40 @@ from keras.layers import Dropout, Flatten, Dense, GlobalAveragePooling2D
 from keras import backend as k
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard, EarlyStopping
 
-#https://medium.com/@noel_kennedy/how-to-use-half-precision-float16-when-training-on-rtx-cards-with-tensorflow-keras-d4033d59f9e4
-# k.set_floatx('float32')
-# k.set_epsilon(1e-6) #default is 1e-7
-
-# from keras.backend.common import set_floatx
-
-# set_floatx('float16')
 
 # https://www.tensorflow.org/xla#step_3_run_with_xla
 # tf.config.optimizer.set_jit(True)
+# k.config.optimizer.set_jit(True)
 
-#k.config.optimizer.set_jit(True)
-
+# Scaled image size
 img_width, img_height = 331, 331
-# img_width, img_height = 662, 662
-#
-# nb_train_samples = 210
-# nb_train_samples = 210
-# nb_validation_samples = 99
 
-# train_data_dir = "../LabelledData/Costa Rica/Training data_4_edited by Torben for second loop/"
-# validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
-# train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
 
-batch_size = 127    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
-val_batch_size = batch_size
-epochs = 100
+batch_size = 255    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
+val_batch_size = batch_size # validation batch
+epochs = 100 # number of epochs
 
-save_period = 1
+save_period = 1 # model saving frequency
 
-multiGPU = False # @todo multiGPU error..
 validation_split = 0.4 # % test photos
 
-dropout = 0.3
+dropout = 0.3 # % dropout layers
 
-loadWeights = True
+loadWeights = True # for continuing training
 
 addingClasses = False
 num_classes_prev = 0 # when adding existing ..
 
 
-# sitename = "Seattle"
-#trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+sitename = "Seattle"
+train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
+# validation_data_dir = ""
 
-#sitename = "CostaRica"
-#trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
+trainedweights_name = "../TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
 
-
-
-#sitename = "Saxony"
-#train_data_dir = "../LabelledData/Saxony/Saxony_Flickr_ABS_iterative/"
-#trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Saxony_retrain_19classes_Dec2019_val_acc0.83_2layers.h5"
-#num_layers_train = 3
-
-
-sitename = "Korea"
-train_data_dir = "../LabelledData/Korea/Korea_AI_Dec2019_Training/"
-trainedweights_name = "../TrainedWeights/InceptionResnetV2_retrain_Korea_26classes_Dec2019_val_acc0.74.h5"
-# trainedweights_names = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea.h5"
 num_layers_train = 4
 
-
-
-learning_rate = 1e-5
+learning_rate = 1e-5 # ADAM parameter
 
 ## Correction for imbalanced data
 # https://datascience.stackexchange.com/questions/13490/how-to-set-class-weights-for-imbalanced-classes-in-keras
@@ -183,84 +147,8 @@ learning_rate = 1e-5
 
 
 
-num_classes = 26
+num_classes = 15
 
-# ____________________________________________________________________________________________
-# None
-# Found 13285 images belonging to 20 classes.
-# Found 5708 images belonging to 20 classes.
-# ****************
-# Class #0 = Amur hedgehog
-# Class #1 = Birds
-# Class #2 = Car
-# Class #3 = Cat
-# Class #4 = Chipmunk
-# Class #5 = Dog
-# Class #6 = Eurasian badger
-# Class #7 = Goral
-# Class #8 = Human
-# Class #9 = Korean hare
-# Class #10 = Leopard cat
-# Class #11 = Marten
-# Class #12 = No animal
-# Class #13 = Racoon dog
-# Class #14 = Red squirrel
-# Class #15 = Rodentia
-# Class #16 = Roe dear
-# Class #17 = Siberian weasel
-# Class #18 = Water deer
-# Class #19 = Wild boar
-# Class #20 = unidentified
-# None
-# ****************
-# Class #0 = Amphibians
-# Class #1 = Backpacking
-# Class #2 = Beach
-# Class #3 = Bicycles
-# Class #4 = Birds
-# Class #5 = Birdwatchers
-# Class #6 = Boat
-# Class #7 = Bustravel
-# Class #8 = Camping
-# Class #9 = Canoe
-# Class #10 = Canyoning
-# Class #11 = Caving
-# Class #12 = Climbing
-# Class #13 = Coffee
-# Class #14 = Cows
-# Class #15 = Diving
-# Class #16 = Fishing
-# Class #17 = Flooding
-# Class #18 = Flowers
-# Class #19 = Hiking
-# Class #20 = Horses
-# Class #21 = Hotsprings
-# Class #22 = Hunting
-# Class #23 = Insects
-# Class #24 = Kitesurfing
-# Class #25 = Landscapes
-# Class #26 = Mammals
-# Class #27 = Markets
-# Class #28 = Monkeys Sloths
-# Class #29 = Motorcycles
-# Class #30 = Paragliding
-# Class #31 = Pplnoactivity
-# Class #32 = Rafting
-# Class #33 = Reptiles
-# Class #34 = Skyboat
-# Class #35 = Surfing
-# Class #36 = Swimming
-# Class #37 = Tourgroups
-# Class #38 = Trailrunning
-# Class #39 = Volcano
-# Class #40 = Waterfall
-# Class #41 = Whalewatching
-# Class #42 = Ziplining
-# Class #43 = otheractivities
-# ****************
-# the ratio of validation_split is 0.3
-# the size of train_dir is 5365
-# the size of val_dir is 2329
 
 
 ##### build our classifier model based on pre-trained InceptionResNetV2:
@@ -379,11 +267,6 @@ for layer in model_final.layers[:FREEZE_LAYERS]:
     layer.trainable = False
 
 
-
-if multiGPU:
-    # @todo multi gpu throws an error (tuple does not exist?) possibly due to version conflicts..
-    model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
-
 # compile the model (should be done *after* setting layers to non-trainable)
 
 
@@ -406,68 +289,12 @@ model_final.compile(optimizer=Adam(lr=learning_rate), loss='categorical_crossent
 # https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/
 # https://medium.com/@nishantnikhil/adam-optimizer-notes-ddac4fd7218
 
-
 # we can use SGD with a low learning rate
-#model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=1e-4, momentum=0.9), metrics=["accuracy", "categorical_accuracy"])
+# model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=1e-4, momentum=0.9), metrics=["accuracy", "categorical_accuracy"])
 
-#
-# # https://github.com/keras-team/keras/issues/7924
-#
-#
-# Hi @rnirdhar @ivancruzbht @dilipajm
-# I am using the following codes on Keras 2.2.0. The original weights at the last layer are copied back into the new layer. Hope this can help. When model is a sequential model:
-#
-# from keras.layers import Dense
-# import numpy as np
-#
-# # save the original weights
-# weights_bak = model.layers[-1].get_weights()
-# nb_classes = model.layers[-1].output_shape[-1]
-# model.pop()
-# model.add(Dense(nb_classes + 1, activation='softmax'))
-# weights_new = model.layers[-1].get_weights()
-#
-# # copy the original weights back
-# weights_new[0][:, :-1] = weights_bak[0]
-# weights_new[1][:-1] = weights_bak[1]
-#
-# # use the average weight to init the new class.
-# weights_new[0][:, -1] = np.mean(weights_bak[0], axis=1)
-# weights_new[1][-1] = np.mean(weights_bak[1])
-#
-# model.layers[-1].set_weights(weights_new)
-#
-# When the model is defined by functional API:
-#
-# from keras.models import Model
-# import numpy as np
-#
-# # save the original weights
-# weights_bak = model.layers[-1].get_weights()
-# nb_classes = model.layers[-1].output_shape[-1]
-#
-# model.layers.pop()
-# new_layer = Dense(nb_classes + 1, activation='softmax')
-# out = new_layer(model.layers[-1].output)
-# inp = model.input
-# model = Model(inp, out)
-# weights_new = model.layers[-1].get_weights()
-#
-# # copy the original weights back
-# weights_new[0][:, :-1] = weights_bak[0]
-# weights_new[1][:-1] = weights_bak[1]
-#
-# # use the average weight to init the new class.
-# weights_new[0][:, -1] = np.mean(weights_bak[0], axis=1)
-# weights_new[1][-1] = np.mean(weights_bak[1])
-#
-# model.layers[-1].set_weights(weights_new)
-#
-
-# print(model_final.summary())
 
 # Save the model architecture
-with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout' + '0.0' + '.json', 'w') as f:
+with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout' + dropout.__str__()  + '.json', 'w') as f:
     f.write(model_final.to_json())
 
 
@@ -547,7 +374,7 @@ print('the size of val_dir is {}'.format(nb_validation_samples))
 
 
 # Save the model according to the conditions
-checkpoint = ModelCheckpoint("../TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', period=save_period)
+checkpoint = ModelCheckpoint("../TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', save_freq=save_period)
 
 
 early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
@@ -662,15 +489,6 @@ for i in range(len(errors)):
     plt.title(title)
     plt.imshow(original)
     plt.show()
-
-
-#### Feature extraction
-
-
-# @todo feature extraction
-
-
-
 
 
 

@@ -131,7 +131,7 @@ img_width, img_height = 331, 331
 # validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
 # train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
 
-batch_size = 127    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
+batch_size = 255    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
 val_batch_size = batch_size
 epochs = 100
 
@@ -142,7 +142,7 @@ validation_split = 0.4 # % test photos
 
 dropout = 0.3
 
-loadWeights = True
+loadWeights = False
 
 addingClasses = False
 num_classes_prev = 0 # when adding existing ..
@@ -183,7 +183,7 @@ learning_rate = 1e-5
 
 
 
-num_classes = 26
+num_classes = 27
 
 # ____________________________________________________________________________________________
 # None
@@ -467,7 +467,7 @@ model_final.compile(optimizer=Adam(lr=learning_rate), loss='categorical_crossent
 # print(model_final.summary())
 
 # Save the model architecture
-with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout' + '0.0' + '.json', 'w') as f:
+with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout' + dropout.__str__() + '.json', 'w') as f:
     f.write(model_final.to_json())
 
 

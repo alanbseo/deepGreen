@@ -45,22 +45,22 @@ os.environ['HIP_VISIBLE_DEVICES'] = '0'
 #            "boat other"]
 
 # Seattle
-dataname = "FlickrSeattle_Photos_All"
-model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
-photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/NewTestPhotos'
-# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+# dataname = "FlickrSeattle_Photos_All"
+# model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
+# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/NewTestPhotos'
+# # photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
+# #
+# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+# # trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
+# #
+# out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Feb2020/"
+# #
+# classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
+#            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
+#            "trailrunning"]
 #
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
-# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
 #
-out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Feb2020/"
-#
-classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
-           "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
-           "trailrunning"]
-
-
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
 
 
 # Saxony
@@ -95,7 +95,7 @@ trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_ret
 # Class #4 = climbing
 # Class #5 = cycling
 # Class #6 = dog walking
-# Class #7 = hiking
+# Class #7 = hiking+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Class #8 = horseback riding
 # Class #9 = landscape
 # Class #10 = mammals
@@ -111,54 +111,55 @@ trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_ret
 
 
 # Korea
-# dataname = "Korea"
-# model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout0.2.json'
-# photo_path_base = '/DATA2TB/CameraTraps_Korea/Photos/NewCameraTrapPhotos_unlabelled_Dec2019'
+dataname = "Korea"
+model_json = 'Model/InceptionResnetV2_retrain_Korea_architecture_dropout0.3.json'
+photo_path_base = '/DATA10TB/CameraTraps_Korea/Photos/'
+
+trainedweights_name = "../TrainedWeights/InceptionResnetV2_retrain_Korea_27classes_Okt2020_val_acc0.78.h5"
+#_Korea_21classes_Dec2019_val_acc0.65.h5"
 #
-# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea_26classes_Dec2019_val_acc0.74.h5"
-# #_Korea_21classes_Dec2019_val_acc0.65.h5"
-# #
-# out_path_base = "/DATA2TB/CameraTraps_Korea_Tagging2019_v5/"
-# #
+out_path_base = "/DATA10TB/CameraTraps_Korea/Tagging2020_v1/"
 #
+
+
+classes = ["Amur hedgehog", "Asian badger", "Bat", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Eurasian Otter", "Goral", "Korean hare",
+           "Least weasel",
+            "Marten", "Musk deer",  "No animal", "Red squirrel", "Rodentia",  "Flying squirrel",  "Siberian weasel", "Birds", "Human", "Leopard cat",
+            "Racoon dog", "Roe dear", "Unidentified", "Water deer", "Wild boar"]
 #
-# classes = ["Amur hedgehog", "Bat", "Car", "Cat", "Chipmunk", "Dog", "Eurasian badger", "Eurasian Otter", "Goral", "Korean hare",
-#            "Least weasel",
-#             "Marten", "Musk deer",  "No animal", "Red squirrel", "Rodentia",  "Flying squirrel",  "Siberian weasel", "Birds", "Human", "Leopard cat",
-#             "Racoon dog", "Roe dear", "Unidentified", "Water deer", "Wild boar"]
-# #
 # ****************
 # Class #0 = Amur hedgehog
-# Class #1 = Bat
-# Class #2 = Car
-# Class #3 = Cat
-# Class #4 = Chipmunk
-# Class #5 = Dog
-# Class #6 = Eurasian badger
-# Class #7 = Eurasian otter
-# Class #8 = Goral
-# Class #9 = Korean hare
-# Class #10 = Least weasel
-# Class #11 = Marten
-# Class #12 = Musk deer
-# Class #13 = No animal
-# Class #14 = Red squirrel
-# Class #15 = Rodentia
-# Class #16 = Siberian flying squirrel
-# Class #17 = Siberian weasel
-# Class #18 = birds
-# Class #19 = human
-# Class #20 = leopard cat
-# Class #21 = racoon dog
-# Class #22 = roe dear
-# Class #23 = unidentified
-# Class #24 = water deer
-# Class #25 = wild boar
+# Class #1 = Asian badger
+# Class #2 = Bat
+# Class #3 = Car
+# Class #4 = Cat
+# Class #5 = Chipmunk
+# Class #6 = Dog
+# Class #7 = Eurasian badger
+# Class #8 = Eurasian otter
+# Class #9 = Goral
+# Class #10 = Korean hare
+# Class #11 = Least weasel
+# Class #12 = Marten
+# Class #13 = Musk deer
+# Class #14 = No animal
+# Class #15 = Red squirrel
+# Class #16 = Rodentia
+# Class #17 = Siberian flying squirrel
+# Class #18 = Siberian weasel
+# Class #19 = birds
+# Class #20 = human
+# Class #21 = leopard cat
+# Class #22 = racoon dog
+# Class #23 = roe dear
+# Class #24 = unidentified
+# Class #25 = water deer
+# Class #26 = wild boar
 os.chdir(default_path)
 
 out_path = out_path_base + modelname + "/" + dataname + "/"
 
-prediction_batch_size = 32  # to increase the speed of tagging .
+prediction_batch_size = 511  # to increase the speed of tagging .
 # number of images for one batch prediction
 
 top = 10  # 10  print top-n classes
@@ -431,7 +432,7 @@ for f_idx in range(0, len(foldernames)):
         # kind of equivalent to `sapply()' in R
         def foo_get_predicted_filename(x, x2):
             # return (out_path + "Result/" + modelname + "/ClassifiedPhotos/" + foldername + "/" + x)
-            return (out_path + "Result/" + "/ClassifiedPhotos/" + "/" + x + "/2ndClass_" +x2 )
+            return (out_path + "Result/" + "/ClassifiedPhotos/" + "/" + foldername + "/" + x + "/2ndClass_" +x2 )
 
 
         predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v, predicted_class_top2_v))
@@ -473,7 +474,7 @@ for f_idx in range(0, len(foldernames)):
 
     df_aoi.columns = header
 
-ll
+
     # @todo attention map
 
 
