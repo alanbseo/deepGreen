@@ -114,7 +114,7 @@ batch_size = 255    # the larger is faster in training. Cponsider 1) training sa
 val_batch_size = batch_size # validation batch
 epochs = 100 # number of epochs
 
-save_period = 1 # model saving frequency
+save_period = 5 # model saving frequency
 
 validation_split = 0.4 # % test photos
 
@@ -148,7 +148,22 @@ learning_rate = 1e-5 # ADAM parameter
 
 
 num_classes = 15
-
+# ****************
+# Class #0 = backpacking
+# Class #1 = birdwatching
+# Class #2 = boating
+# Class #3 = camping
+# Class #4 = fishing
+# Class #5 = flooding
+# Class #6 = hiking
+# Class #7 = horseriding
+# Class #8 = mtn_biking
+# Class #9 = noactivity
+# Class #10 = otheractivities
+# Class #11 = pplnoactivity
+# Class #12 = rock climbing
+# Class #13 = swimming
+# Class #14 = trailrunning
 
 
 ##### build our classifier model based on pre-trained InceptionResNetV2:
@@ -374,7 +389,8 @@ print('the size of val_dir is {}'.format(nb_validation_samples))
 
 
 # Save the model according to the conditions
-checkpoint = ModelCheckpoint("../TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy', verbose=1, save_best_only=True, save_weights_only=False, mode='auto', save_freq=save_period)
+checkpoint = ModelCheckpoint("../TrainedWeights/InceptionResnetV2_" + sitename + "_retrain.h5", monitor='val_accuracy',
+                             verbose=1, save_best_only=False, save_weights_only=False, mode='auto', save_freq=save_period)
 
 
 early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
