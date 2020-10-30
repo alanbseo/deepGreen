@@ -300,8 +300,6 @@ obs_in = factor(dt_tmp$TrueClass, classes)
 result_Top1 <- evaluateClassification(pred_in, obs_in)
 result_Top2 <- evaluateClassification( factor(dt_tmp$Top2, classes), obs_in)
 
-writeLines(result_Top1, con = file("Output/ClassificationAccuracy_MountainLoop_Top1.txt", open = "rw"))
-writeLines(result_Top2, con = file("Output/ClassificationAccuracy_MountainLoop_Top2.txt", open = "rw"))
 
 
 
