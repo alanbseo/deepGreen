@@ -1,4 +1,3 @@
-
 #### Fine-tune InceptionV3 on a new set of classes
 
 # The task of fine-tuning a network is to tweak the parameters of an already trained network so that it adapts to the new task at hand. As explained here, the initial layers learn very general features and as we go higher up the network, the layers tend to learn patterns more specific to the task it is being trained on. Thus, for fine-tuning, we want to keep the initial layers intact ( or freeze them ) and retrain the later layers for our task.
@@ -15,29 +14,12 @@
 # https://github.com/jkjung-avt/keras-cats-dogs-tutorial/blob/master/train_inceptionresnetv2.py
 # https://forums.fast.ai/t/globalaveragepooling2d-use/8358
 
-### You might consider running this script within a virtual environment
-###  like this, for example, from the command line:
-
-## first, setup a virtualenv from shell...
-# virtualenv -p python3 venv_activities
-# source venv_activities/bin/activate
-
-## with the right packages...
-# pip install tensorflow
-# pip install keras
-# pip install opencv-python
-# pip install requests
-# pip install matplotlib
-
-## then launch python(3)...
-# python
 
 import keras
 # import numpy as np
 import os
 # import cv2
 
-#!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
 os.environ['HIP_VISIBLE_DEVICES'] = '0' # For AMD GPU
 
 import csv
@@ -63,7 +45,7 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 
-from keras.applications import inception_resnet_v2
+from tensorflow.keras.applications import inception_resnet_v2
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.applications.imagenet_utils import decode_predictions
@@ -77,11 +59,11 @@ from keras.preprocessing import image
 # from keras.applications import vgg16
 import numpy as np
 
-from tensorflow.keras.utils import multi_gpu_model # Multi-GPU Training ref: https://gist.github.com/mattiavarile/223d9c13c9f1919abe9a77931a4ab6c1
+# from tensorflow.keras.utils import multi_gpu_model # Multi-GPU Training ref: https://gist.github.com/mattiavarile/223d9c13c9f1919abe9a77931a4ab6c1
 
 import math
 
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
+default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/deepGreen/'
 os.chdir(default_path)
 
 # split utils (@TODO reference)
@@ -98,7 +80,9 @@ from keras import metrics
 
 from keras.models import Sequential, Model
 from keras.layers import Dropout, Flatten, Dense, GlobalAveragePooling2D
-from keras import backend as k
+# from keras import backend as k
+from tensorflow.keras import backend as k
+
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard, EarlyStopping
 
 
@@ -110,7 +94,7 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard,
 img_width, img_height = 331, 331
 
 
-batch_size = 255    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
+batch_size = 32    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
 val_batch_size = batch_size # validation batch
 epochs = 100 # number of epochs
 
