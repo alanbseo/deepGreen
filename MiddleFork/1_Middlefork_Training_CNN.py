@@ -63,7 +63,7 @@ import numpy as np
 
 import math
 
-default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/deepGreen/'
+default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
 os.chdir(default_path)
 
 # split utils (@TODO reference)
@@ -94,7 +94,7 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard,
 img_width, img_height = 331, 331
 
 
-batch_size = 32    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
+batch_size = 255    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
 val_batch_size = batch_size # validation batch
 epochs = 100 # number of epochs
 
@@ -108,7 +108,6 @@ loadWeights = True # for continuing training
 
 addingClasses = False
 num_classes_prev = 0 # when adding existing ..
-
 
 sitename = "Seattle"
 train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"

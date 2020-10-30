@@ -166,6 +166,8 @@ result_Top2 <- evaluateClassification( factor(dt_evaluated$Top2, classes), obs_i
 
 
 
+
+
 pdf("Output/ClassificationAccuracy_MiddleFork.pdf", width = 18, height = 10)
 par(mfrow=c(1,1))
 

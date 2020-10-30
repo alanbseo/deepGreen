@@ -1,10 +1,11 @@
+# Location of the dropbox shared folder
+dropbox_location = "~/Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/"
 
-setwd("~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/")
-
-
+path_seattle = paste0(dropbox_location)
+setwd(path_seattle)
 
 ## manual eval 
-dt = readxl::read_excel("Manual evaluation/Manual evalutation_MiddleFork_18Feb2020_n724.xlsx", 1)
+dt = readxl::read_excel("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_18Feb2020_n724.xlsx", 1)
 dt$YN = factor(dt$evaluation, levels = c("y", "n", "x"))
 dt$YN [dt$YN == "x"] = "y"
 dt$YN 
@@ -18,7 +19,7 @@ dt_tab = t(do.call("rbind", dt_tab_l))
 dt_tab_rel = apply(dt_tab, MARGIN = 2, FUN = function(x) x / sum(x))
 over_acc =round( sum(dt_tab[1,]) / sum(dt_tab), 3)
 
-pdf("Manual evaluation/FlickrMiddleFork_manualevaluation.pdf", width = 12, height = 6)
+pdf("Output/FlickrMiddleFork_manualevaluation.pdf", width = 12, height = 6)
 par(mfrow=c(1,2), mar=c(6,12,4,4))
 barplot(dt_tab, beside=T, horiz=T, main = "# of photos correctly/incorrectly classifed", las=2, names = paste0(colnames(dt_tab), " (n=", colSums(dt_tab), ")"),  sub = paste0("Overall acc.=", over_acc), col = c("red", "green", "black"))
 acc = formatC( dt_tab_rel[1,],digits = 2)
@@ -29,6 +30,13 @@ legend("topright", legend = c("Incorrect", "Correct"), col = c( "green", "red"),
 
 dev.off()
 
+
+
+
+# Activity classes
+classes = c("backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding", "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming", "trailrunning")
+
+n_classes = length(classes)
 
 
 
@@ -43,7 +51,7 @@ dev.off()
 
 
 ## predicted tags
-dt = read.csv("/DATA2TB/FlickrSeattle_Tagging_Sep2019/Flickr2/InceptionResnetV2_dropout50/FlickrSeattle_Photos_All/Result/InceptionResnetV2_dropout50/CSV/FlickrSeattle_AllPhotos.csv")
+dt = read.csv("TaggedResult_Nov2019_Middlefork/CSV/FlickrSeattle_AllPhotos.csv")
 str(dt)
 
 tags_dt = dt[,2:11]
@@ -75,11 +83,11 @@ library(reshape2)
       
  
 cnames = names(table(unlist(tags_dt)))
-for (i in 1:16) { 
-    
-    
-    probs_all[,cnames[i]] = 
-}
+# for (i in 1:16) { 
+#     
+#     
+#     probs_all[,cnames[i]] = 
+# }
 
 
 
@@ -94,11 +102,11 @@ prob_l = tapply(probs_v, INDEX = tags_v, FUN = c, na.rm=T)
 
 ## number of training samples per class 
 
-classes = list.files("../../LabelledData/Seattle/Photos_iterative_Aug2019/train/")
+classes = list.files("Training images/Photos_iterative_Aug2019/train/")
 
-n_of_sampls = sapply(classes, function(x) length(list.files(paste0("../../LabelledData/Seattle/Photos_iterative_Aug2019/train/", x))))
+n_of_samples = sapply(classes, function(x) length(list.files(paste0("Training images/Photos_iterative_Sep2019/train/", x))))
 
-n_of_sampls = n_of_sampls[ names(prob_avg)]
+n_of_sampls = n_of_samples[ names(prob_avg)]
 barplot(n_of_sampls, main = "Number of training images", las=2)
 barplot(log(n_of_sampls, 10), main = "Log10 Number of training images", las=2)
 
