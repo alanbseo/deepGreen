@@ -5,15 +5,15 @@
 
 # folder <- "~/Dropbox/KIT/FlickrEU/DATA2TB_LINK/Flickr15Oct2019/backpacking/"
 # folder_base <- "/DATA10TB/FlickrSeattle_Result_Finetuned/Heatmap_InceptionResnetV2_finetuning/"
-folder_base <- "/DATA10TB/FlickrSeattle_Tagging_Feb2020/ClassifiedPhotos/" # new 18000 photos outside middlefork
-folder_vali = "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/Manual evaluation/New18kPhotos/Sample_eval/"
+folder_base <- "~/Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/TaggedResult_Nov2019_Middlefork/ClassifiedPhotos/" 
+folder_vali = "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/Manual evaluation/New18kPhotos/Sample_eval/"# new 18000 photos outside middlefork
 library(stringr)
 
 dirs = list.dirs(folder_base, recursive = F, full.names = F)
 min_samples_size = 5 
 max_samples_size = 100
 
-sampling_rate = 0.2 # 10% 
+sampling_rate = 0.2 # 20% 
 summed = 0 
 
 
@@ -53,6 +53,18 @@ print(summed)
 
 
 
+
+
+# Manually evaluated data (used the sampled photos)
+dt_evaluated = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_10July2020_n724_withTop2_corrected.xlsx", 1)
+colnames(dt_evaluated)
+
+
+## training photo ids 
+
+all_img_names = basename(list.files("../../UnlabelledData/Seattle/FlickrSeattle_AllPhotos/", recursive = T, full.names = F, include.dirs = F))
+
+traing_img_names = basename(list.files("Training images/Photos_iterative_Sep2019/train/", recursive = T, full.names = F, include.dirs = F))
 
 
 

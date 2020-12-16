@@ -94,9 +94,9 @@ from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard,
 img_width, img_height = 331, 331
 
 
-batch_size = 255    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
+batch_size = 512    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
 val_batch_size = batch_size # validation batch
-epochs = 100 # number of epochs
+epochs = 300 # number of epochs
 
 save_period = 5 # model saving frequency
 
@@ -104,7 +104,7 @@ validation_split = 0.4 # % test photos
 
 dropout = 0.3 # % dropout layers
 
-loadWeights = True # for continuing training
+loadWeights = False # for continuing training
 
 addingClasses = False
 num_classes_prev = 0 # when adding existing ..

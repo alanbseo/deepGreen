@@ -102,6 +102,22 @@ dt_evaluated = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_Middle
 colnames(dt_evaluated)
 
 
+## training photo ids 
+
+all_img_names = basename(list.files("../../UnlabelledData/Seattle/FlickrSeattle_AllPhotos/", recursive = T, full.names = F, include.dirs = F))
+
+traing_img_names = basename(list.files("Training images/Photos_iterative_Sep2019/train/", recursive = T, full.names = F, include.dirs = F))
+
+  
+
+table(all_img_names %in% traing_img_names)
+
+length(traing_img_names)
+
+table(dt_evaluated$photo_id %in% traing_img_names)
+
+
+dt_evaluated = dt_evaluated[(!dt_evaluated$photo_id %in% traing_img_names),]
 
 
 
