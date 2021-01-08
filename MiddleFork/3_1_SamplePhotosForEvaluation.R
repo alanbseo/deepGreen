@@ -1,21 +1,155 @@
 ##### Sample tagged photos for evaluation 
- 
-# @TODO use random number generators 
-# @TODO fix the folder names
 
-# folder <- "~/Dropbox/KIT/FlickrEU/DATA2TB_LINK/Flickr15Oct2019/backpacking/"
-# folder_base <- "/DATA10TB/FlickrSeattle_Result_Finetuned/Heatmap_InceptionResnetV2_finetuning/"
-folder_base <- "~/Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/TaggedResult_Nov2019_Middlefork/ClassifiedPhotos/" 
-folder_vali = "~/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/Manual evaluation/New18kPhotos/Sample_eval/"# new 18000 photos outside middlefork
-library(stringr)
 
-dirs = list.dirs(folder_base, recursive = F, full.names = F)
-min_samples_size = 5 
+library(openxlsx) 
+
+
+setwd("~/Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/")
+
+# @TODO use random seeding 
+
+
+# Activity classes
+classes = c("backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding", "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming", "trailrunning")
+
+n_classes = length(classes)
+
+# Manually evaluated data (used the sampled photos)
+dt_evaluated = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_10July2020_n724_withTop2_corrected.xlsx", 1)
+colnames(dt_evaluated)
+
+
+## training photo ids 
+all_img_names = basename(list.files("All images/FlickrSeattle_AllPhotos/", recursive = T, full.names = F, include.dirs = F))
+
+traing_img_names = basename(list.files("Training images/Photos_iterative_Sep2019/train/", recursive = T, full.names = F, include.dirs = F))
+
+predicted_img_byfolder = sapply(classes, FUN = function(x) list.files(paste0("TaggedResult_Nov2019_Middlefork/ClassifiedPhotos/", x), recursive = T, full.names = F, include.dirs = F))
+
+predicted_csv = read.csv("TaggedResult_Nov2019_Middlefork/CSV/FlickrSeattle_AllPhotos.csv")
+
+# tagged images used not used in the training 
+
+dt_evaluated_valid  = dt_evaluated[!(dt_evaluated$photo_id %in% traing_img_names), ] 
+
+tagged_img_byclass = tapply(dt_evaluated_valid$photo_id, INDEX = dt_evaluated_valid$Top1_new, FUN = c)
+
+
+
+min_samples_size = 10
 max_samples_size = 100
 
 sampling_rate = 0.2 # 20% 
-summed = 0 
 
+
+#### Sample new photos to replace photos used in the training 
+
+n_new_samples = 0 
+new_photos_to_sample = vector("list", length = n_classes)
+
+for (c_idx in 1:n_classes) { 
+    class_tmp = classes[c_idx]
+    
+    photos = predicted_img_byfolder[[c_idx]]
+    
+    photos = setdiff(photos, traing_img_names) # avoid training images 
+    photos = setdiff(photos, dt_evaluated_valid$photo_id) # avoid readily tagged images 
+    
+    predicted_photos_tmp = predicted_img_byfolder[[class_tmp]]
+    n_predicted_photos = length(predicted_photos_tmp)
+    cat("predicted ", n_predicted_photos)
+    cat(" avail photos ", length(photos))
+    
+    tagged_photos_tmp = tagged_img_byclass[[class_tmp]]
+    n_tagged_photos = length(tagged_photos_tmp)
+    cat(" tagged ", n_tagged_photos)
+    
+    n_samples_tmp =  max(round(n_predicted_photos * sampling_rate), min_samples_size) - n_tagged_photos
+    n_samples_tmp = min(n_samples_tmp, max_samples_size)
+    n_samples_tmp = ifelse(n_samples_tmp>0, n_samples_tmp, no = 0)
+    
+    print(paste0("new required photos= ", n_samples_tmp))
+    n_avail_photos =  min( length(photos), n_samples_tmp)
+    print(paste0("actual new photos= ",n_avail_photos))
+    
+    
+    n_new_samples = n_new_samples + n_avail_photos
+    
+    set.seed(1978 + c_idx)
+    
+    new_photos = sample(photos, n_avail_photos)
+    
+    
+    if (length(new_photos)>0) { 
+        
+        top1_info =  as.character(predicted_csv$Top1[match(new_photos, predicted_csv$Filename)])
+        top2_info =  as.character(predicted_csv$Top2[match(new_photos, predicted_csv$Filename)])
+        
+        print(top1_info)
+        print(top2_info)
+        target_dir =  paste0("Manual evaluation_MiddleFork/Sample_eval_Dec2020/", class_tmp)
+        
+        new_photos_to_sample[[c_idx]] = data.frame(photo_id = new_photos, Top1_old = NA, Top1_new = top1_info, Top2 = top2_info, Top1YN = NA, Top2YN = NA, Class=NA, Note = NA, Corrected= NA)
+        
+        if (!dir.exists(target_dir)) { 
+            dir.create(target_dir, recursive = T)   
+        }
+        
+        
+        file.copy(from = paste0("All images/FlickrSeattle_AllPhotos/", new_photos), to = paste0(target_dir, "/", new_photos)) 
+    }
+}
+
+print(n_new_samples + nrow(dt_evaluated_valid))
+names(new_photos_to_sample) = classes
+
+length(unlist(new_photos_to_sample))
+
+
+new_photos_to_sample_df = do.call("rbind", new_photos_to_sample)
+
+colnames(new_photos_to_sample_df)
+
+
+write.xlsx(new_photos_to_sample_df, file = "Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_16Dec2020_n379_withTop2_newphotos.xlsx")
+
+
+
+
+stop("ends here")
+
+
+
+
+
+
+
+
+
+folder_base <- "TaggedResult_Nov2019_Middlefork/ClassifiedPhotos/" 
+
+set.seed(1978)
+
+
+
+samples_idx = sample(1:length(photos), length(photos)*sampling_rate)
+files[sample(1:length(files), length(files)*sampling_rate)]
+
+
+
+
+
+
+
+# folder <- "~/Dropbox/KIT/FlickrEU/DATA2TB_LINK/Flickr15Oct2019/backpacking/"
+# folder_base <- "/DATA10TB/FlickrSeattle_Result_Finetuned/Heatmap_InceptionResnetV2_finetuning/"
+folder_vali = "Manual evaluation_MiddleFork/New18kPhotos/Sample_eval/"# new 18000 photos outside middlefork
+library(stringr)
+
+dirs = list.dirs(folder_base, recursive = F, full.names = F)
+
+
+summed = 0 
 
 for (dir_idx in 1:length(dirs)) { 
     folder_class =  dirs[dir_idx]
@@ -54,17 +188,6 @@ print(summed)
 
 
 
-
-# Manually evaluated data (used the sampled photos)
-dt_evaluated = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_10July2020_n724_withTop2_corrected.xlsx", 1)
-colnames(dt_evaluated)
-
-
-## training photo ids 
-
-all_img_names = basename(list.files("../../UnlabelledData/Seattle/FlickrSeattle_AllPhotos/", recursive = T, full.names = F, include.dirs = F))
-
-traing_img_names = basename(list.files("Training images/Photos_iterative_Sep2019/train/", recursive = T, full.names = F, include.dirs = F))
 
 
 

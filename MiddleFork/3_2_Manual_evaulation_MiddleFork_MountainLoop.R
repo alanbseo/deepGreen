@@ -98,8 +98,8 @@ col_classes = c25[1:n_classes]
 # }
 
 # Manually evaluated data (used the sampled photos)
-dt_evaluated = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_10July2020_n724_withTop2_corrected.xlsx", 1)
-colnames(dt_evaluated)
+dt_evaluated_old = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_10July2020_n724_withTop2_corrected.xlsx", 1)
+colnames(dt_evaluated_old)
 
 
 ## training photo ids 
@@ -114,10 +114,32 @@ table(all_img_names %in% traing_img_names)
 
 length(traing_img_names)
 
+table(dt_evaluated_old$photo_id %in% traing_img_names)
+
+
+dt_evaluated_old = dt_evaluated_old[(!dt_evaluated_old$photo_id %in% traing_img_names),]
+
+# str(dt_evaluated)
+
+  
+### new eval (Dec 2020)
+dt_evaluated_new = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_16Dec2020_n379_withTop2_newphotos.xlsx", 1)
+ 
+
+
+dt_evaluated = rbind(dt_evaluated_old, dt_evaluated_new)
+
 table(dt_evaluated$photo_id %in% traing_img_names)
 
 
-dt_evaluated = dt_evaluated[(!dt_evaluated$photo_id %in% traing_img_names),]
+
+
+
+
+
+
+
+
 
 
 
@@ -179,6 +201,10 @@ table(obs_in)
 
 result_Top1 <- evaluateClassification(pred_in, obs_in)
 result_Top2 <- evaluateClassification( factor(dt_evaluated$Top2, classes), obs_in)
+
+
+library(xtable)
+xtable(result_Top1$table)
 
 
 writeLines(capture.output(print(result_Top1)), con = ("Output/ClassificationAccuracy_MiddleFork_Top1.txt"))
