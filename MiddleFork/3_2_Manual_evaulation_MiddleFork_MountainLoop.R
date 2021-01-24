@@ -14,7 +14,7 @@
 #rockclimbing: 198
 #swimming: 174
 library(parallel)
-library(doMC)
+library(doSNOW)
 library(openxlsx)
 # library(xlsx)
 library(rJava)
@@ -37,6 +37,9 @@ sum(classification[,2]) # 14839
 
 # Activity classes
 classes = c("backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding", "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming", "trailrunning")
+
+classes_fullnames = c("Backpacking", "Birdwatching", "Boating", "Camping", "Fishing", "Flooding", "Hiking", "Horseriding", "MTN biking", "No activity", "Other activities", "People no activity", "Rock climbing", "Swimming", "Trailrunning")
+
 
 n_classes = length(classes)
 
@@ -212,31 +215,63 @@ writeLines(capture.output(print(result_Top2)), con = ("Output/ClassificationAccu
 
 
 
+selected_metrics = c("Balanced Accuracy","F1", "Sensitivity", "Specificity")
 
 pdf("Output/ClassificationAccuracy_MiddleFork.pdf", width = 18, height = 10)
+
 par(mfrow=c(1,1))
 
 plot(0, col = "white", axes=F,  main = "Confusion matrix (Top1); reference in columns and predictions in rows", xlab=NA, ylab=NA)
 grid.table(result_Top1$table)
 plot(0, col = "white",  axes=F, main = "Confusion matrix (Top2); reference in columns and predictions in rows", xlab=NA, ylab=NA)
 grid.table(result_Top2$table)
-par(mfrow=c(1,2), mar=c(4,4,4,4), oma=c(10,0,0,0))
+par(mfrow=c(1,2), mar=c(4,4,4,4), oma=c(10,1,1,1))
 
 d1 = data.frame(c(result_Top1$overall, result_Top1$macro))
 barplot(as.matrix(d1), beside=T, las=2, ylim=c(0,1), main = "Overall classification accuracy in the Middle Fork site (based on Top1)")
 d2 = as.matrix(data.frame(c(result_Top2$overall, result_Top2$macro)))
 
-barplot(d2, beside=T, las=2, ylim=c(0,1), main ="Overall classification accuracy in the Middle Fork site (Based on Top2)")
+barplot(d2[c("Accuracy", "F1", "macroPrecision", "macroRecall")], beside=T, las=2, ylim=c(0,1), main ="Overall classification accuracy in the Middle Fork site (Based on Top2)")
+dev.off()
 
-par(mfrow=c(1,1))
 
-barplot(result_Top1$byClass, beside=T, las=2, col = col_classes, ylim=c(0,1), main = "Accuracy by class (based on Top1)")
-legend("bottomleft", legend = classes, fill = col_classes, bg="white", cex=0.8)
-barplot((result_Top2$byClass), beside=T, las=2, col = col_classes, ylim=c(0,1), main ="Accuracy by  (based on Top2)")
-legend("bottomleft", legend = classes, fill = col_classes, bg="white", cex=0.8)
+res_top1 = data.frame(result_Top1$byClass[,rev(selected_metrics)])
+rownames(res_top1) = classes_fullnames
+write.xlsx(res_top1, file = "Summary tables and figures (working on it)/Table_MF_perfomance.xlsx", row.names=T)
 
+balacc = res_top1$Balanced.Accuracy
+balacc[is.na(balacc)] = 0
+ord = order(balacc, decreasing = F)
+res_top1 = res_top1[ord,]
+colnames(res_top1)[3:4] = c("F1-score", "Balanced Accuracy")
+
+pdf("Output/ClassificationAccuracy_MiddleFork_Top1.pdf", width = 16, height = 12)
+
+par(mfrow=c(1,2), mar=c(4,2,4,0), oma=c(0,14,4,0))
+
+barplot(as.matrix(res_top1), beside=T, las=1, col =  (col_classes[ord]),  main ="", horiz=T, cex.names = 2, cex.axis=1.5)
+plot.new()
+legend("bottomleft",  legend = rev(classes[ord]), fill = rev(col_classes[ord]), bg="white",   cex=2)
 
 dev.off()
+
+
+
+res_top1_MF = res_top1
+ord_MF = ord
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -348,6 +383,33 @@ result_Top1 <- evaluateClassification(pred_in, obs_in)
 result_Top2 <- evaluateClassification( factor(dt_tmp$Top2, classes), obs_in)
 writeLines(capture.output(print(result_Top1)), con = ("Output/ClassificationAccuracy_MountainLoop_Top1.txt"))
 writeLines(capture.output(print(result_Top2)), con = ("Output/ClassificationAccuracy_MountainLoop_Top2.txt"))
+
+
+ 
+
+
+res_top1 = data.frame(result_Top1$byClass[,rev(selected_metrics)])
+rownames(res_top1) = classes_fullnames
+write.xlsx(res_top1, file = "Summary tables and figures (working on it)/Table_ML_perfomance.xlsx", row.names=T)
+
+balacc = res_top1$Balanced.Accuracy
+balacc[is.na(balacc)] = 0
+ord = order(balacc, decreasing = F)
+res_top1 = res_top1[ord,]
+colnames(res_top1)[3:4] = c("F1-score", "Balanced Accuracy")
+
+pdf("Output/Fig4_ClassificationAccuracy_Top1.pdf", width = 16, height = 12)
+
+par(mfrow=c(1,3), mar=c(4,4,4,1), oma=c(0,14,4,0))
+
+barplot(as.matrix(res_top1_MF), beside=T, las=1, col =  (col_classes[ord_MF]),  main ="", horiz=T, cex.names = 2, cex.axis=1.5)
+barplot(as.matrix(res_top1), beside=T, las=1, col =  (col_classes[ord]),  main ="", horiz=T, cex.names = 2, cex.axis=1.5, names.arg = rep("", 4))
+
+plot.new()
+legend("bottomleft",  legend = rev(classes[ord_MF]), fill = rev(col_classes[ord_MF]), bg="white",   cex=2)
+
+dev.off()
+
 
 
 

@@ -296,6 +296,7 @@ with open('Model/InceptionResnetV2_retrain_' + sitename + '_architecture_dropout
     f.write(model_final.to_json())
 
 
+
 # all data in train_dir and val_dir which are alias to original_data. (both dir is temporary directory)
 # don't clear base_dir, because this directory holds on temp directory.
 base_dir, train_tmp_dir, val_tmp_dir = split_utils.train_valid_split(train_data_dir, validation_split, seed=1)
