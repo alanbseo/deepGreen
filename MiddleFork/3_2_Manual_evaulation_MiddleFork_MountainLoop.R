@@ -38,7 +38,7 @@ sum(classification[,2]) # 14839
 # Activity classes
 classes = c("backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding", "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming", "trailrunning")
 
-classes_fullnames = c("Backpacking", "Birdwatching", "Boating", "Camping", "Fishing", "Flooding", "Hiking", "Horseriding", "MTN biking", "No activity", "Other activities", "People no activity", "Rock climbing", "Swimming", "Trailrunning")
+classes_fullnames = c("Backpacking", "Bird watching", "Boating", "Camping", "Fishing", "Flooding", "Hiking", "Horse riding", "Mountain biking", "No activity", "Other activities", "People no activity", "Rock climbing", "Swimming", "Trail running")
 
 
 n_classes = length(classes)
@@ -111,7 +111,7 @@ all_img_names = basename(list.files("../../UnlabelledData/Seattle/FlickrSeattle_
 
 traing_img_names = basename(list.files("Training images/Photos_iterative_Sep2019/train/", recursive = T, full.names = F, include.dirs = F))
 
-  
+
 
 table(all_img_names %in% traing_img_names)
 
@@ -124,10 +124,10 @@ dt_evaluated_old = dt_evaluated_old[(!dt_evaluated_old$photo_id %in% traing_img_
 
 # str(dt_evaluated)
 
-  
+
 ### new eval (Dec 2020)
 dt_evaluated_new = read.xlsx("Manual evaluation_MiddleFork/Manual evalutation_MiddleFork_16Dec2020_n379_withTop2_newphotos.xlsx", 1)
- 
+
 
 
 dt_evaluated = rbind(dt_evaluated_old, dt_evaluated_new)
@@ -182,7 +182,7 @@ evaluateClassification <- function(pred_in, obs_in) {
 }
 
 
- 
+
 
 
 dt_evaluated$Top1YN =   str_trim(dt_evaluated$Top1YN)
@@ -198,70 +198,146 @@ dt_evaluated = dt_evaluated[!is.na(  dt_evaluated$TrueClass ),]
 
 
 pred_in = factor(dt_evaluated$Top1_new, classes)
+ 
 obs_in = factor(dt_evaluated$TrueClass, classes)
 table(obs_in)
 
+ 
 
-result_Top1 <- evaluateClassification(pred_in, obs_in)
-result_Top2 <- evaluateClassification( factor(dt_evaluated$Top2, classes), obs_in)
+
+
+dt_evaluated = dt_evaluated[!is.na(  dt_evaluated$TrueClass ),]
+
+
+# result_Top2 <- evaluateClassification( factor(dt_evaluated$Top2, classes), obs_in)
+
+
+pred_woflood_in = dt_evaluated$Top1_new
+pred_woflood_in[pred_woflood_in=="flooding"] = "noactivity"
+obs_woflood_in= dt_evaluated$TrueClass
+obs_woflood_in[obs_woflood_in=="flooding"] = "noactivity"
+
+
+
+pred_woflood_in = factor(pred_woflood_in, classes[-6])
+obs_woflood_in = factor(obs_woflood_in, classes[-6])
+
+table(is.na(obs_woflood_in))
+
+# Top1 + Top2
+pred_woflood_Top2_in_org = dt_evaluated$Top2
+pred_woflood_Top2_in_org[pred_woflood_Top2_in_org=="flooding"] = "noactivity"
+
+
+pred_woflood_top2_in = pred_woflood_in
+
+table((pred_woflood_in!=obs_woflood_in))
+
+top1and2_idx = (pred_woflood_in!=obs_woflood_in) & (pred_woflood_Top2_in_org==obs_woflood_in)
+
+
+pred_woflood_top2_in[top1and2_idx] = pred_woflood_Top2_in_org[top1and2_idx]
+
+length(obs_woflood_in)
+table(obs_woflood_in)
+
+# without flooding
+result_Top1 <- evaluateClassification(pred_woflood_in, obs_woflood_in)
+result_Top2 <- evaluateClassification(pred_woflood_top2_in, obs_woflood_in)
+
+confmat = result_Top1$table
+
+rownames(confmat) = colnames(confmat) = classes_fullnames[-6]
+
 
 
 library(xtable)
-xtable(result_Top1$table)
+xtable(confmat)
+
+
+col <- function(x){
+  if(x>100) { 
+    paste("\\textcolor{red}{", formatC(x, dig=0, format="f"), "}")
+  } else if (x>10) {
+    paste("\\textcolor{blue}{", formatC(x, dig=0, format="f"), "}")
+  } else if (x>0) {
+    paste("\\textcolor{black}{", formatC(x, dig=0, format="f"), "}")
+  } else {
+    paste("\\textcolor{gray}{", formatC(x, dig=0, format="f"), "}")
+  }
+}
+
+confmat_color <- apply(confmat, MARGIN = 1:2, col)
+
+
+rownames(confmat_color) = colnames(confmat_color) = classes_fullnames[-6]
+
+confmat_out = rbind( cbind(confmat_color, Total=rowSums(confmat)), c(colSums(confmat), ""))
+
+
+print(xtable(confmat_out),sanitize.text.function = function(x){x})
+
+
+levelplot(result_Top1$table, las=2)
+
+ 
+
+
 
 
 writeLines(capture.output(print(result_Top1)), con = ("Output/ClassificationAccuracy_MiddleFork_Top1.txt"))
-writeLines(capture.output(print(result_Top2)), con = ("Output/ClassificationAccuracy_MiddleFork_Top2.txt"))
+# writeLines(capture.output(print(result_Top2)), con = ("Output/ClassificationAccuracy_MiddleFork_Top2.txt"))
 
 
 
-selected_metrics = c("Balanced Accuracy","F1", "Sensitivity", "Specificity")
+selected_metrics = c("Balanced Accuracy","F1", "Precision", "Recall", "Sensitivity", "Specificity")
 
-pdf("Output/ClassificationAccuracy_MiddleFork.pdf", width = 18, height = 10)
+# pdf("Output/ClassificationAccuracy_MiddleFork.pdf", width = 18, height = 10)
+# 
+# par(mfrow=c(1,1))
+# 
+# plot(0, col = "white", axes=F,  main = "Confusion matrix (Top1); reference in columns and predictions in rows", xlab=NA, ylab=NA)
+# grid.table(result_Top1$table)
+# plot(0, col = "white",  axes=F, main = "Confusion matrix (Top2); reference in columns and predictions in rows", xlab=NA, ylab=NA)
+# grid.table(result_Top2$table)
+# par(mfrow=c(1,2), mar=c(4,4,4,4), oma=c(10,1,1,1))
+# 
+# d1 = data.frame(c(result_Top1$overall, result_Top1$macro))
+# barplot(as.matrix(d1), beside=T, las=2, ylim=c(0,1), main = "Overall classification accuracy in the Middle Fork site (based on Top1)")
+# d2 = as.matrix(data.frame(c(result_Top2$overall, result_Top2$macro)))
+# 
+# barplot(d2[c("Accuracy", "F1", "macroPrecision", "macroRecall")], beside=T, las=2, ylim=c(0,1), main ="Overall classification accuracy in the Middle Fork site (Based on Top2)")
+# dev.off()
 
-par(mfrow=c(1,1))
 
-plot(0, col = "white", axes=F,  main = "Confusion matrix (Top1); reference in columns and predictions in rows", xlab=NA, ylab=NA)
-grid.table(result_Top1$table)
-plot(0, col = "white",  axes=F, main = "Confusion matrix (Top2); reference in columns and predictions in rows", xlab=NA, ylab=NA)
-grid.table(result_Top2$table)
-par(mfrow=c(1,2), mar=c(4,4,4,4), oma=c(10,1,1,1))
+res_top1_MF = data.frame(result_Top1$byClass[,rev(selected_metrics)])
+rownames(res_top1_MF) = classes_fullnames[-6]
+write.xlsx(res_top1_MF, file = "Summary tables and figures (working on it)/Table_MF_perfomance.xlsx", row.names=T)
 
-d1 = data.frame(c(result_Top1$overall, result_Top1$macro))
-barplot(as.matrix(d1), beside=T, las=2, ylim=c(0,1), main = "Overall classification accuracy in the Middle Fork site (based on Top1)")
-d2 = as.matrix(data.frame(c(result_Top2$overall, result_Top2$macro)))
-
-barplot(d2[c("Accuracy", "F1", "macroPrecision", "macroRecall")], beside=T, las=2, ylim=c(0,1), main ="Overall classification accuracy in the Middle Fork site (Based on Top2)")
-dev.off()
-
-
-res_top1 = data.frame(result_Top1$byClass[,rev(selected_metrics)])
-rownames(res_top1) = classes_fullnames
-write.xlsx(res_top1, file = "Summary tables and figures (working on it)/Table_MF_perfomance.xlsx", row.names=T)
-
-balacc = res_top1$Balanced.Accuracy
+balacc = res_top1_MF$Balanced.Accuracy
 balacc[is.na(balacc)] = 0
-ord = order(balacc, decreasing = F)
-res_top1 = res_top1[ord,]
-colnames(res_top1)[3:4] = c("F1-score", "Balanced Accuracy")
 
-pdf("Output/ClassificationAccuracy_MiddleFork_Top1.pdf", width = 16, height = 12)
+f1_MF = res_top1_MF$F1
+f1_MF[is.na(f1_MF)] = 0
+
+ord_MF = order(f1_MF, decreasing = T)
+res_top1_MF_ord = res_top1_MF[ord_MF,]
+colnames(res_top1_MF_ord)[5:6] = c("F1-score", "Balanced Accuracy")
+
+pdf("Output/ClassificationAccuracy_MiddleFork_Top1.pdf", width = 18, height = 14)
 
 par(mfrow=c(1,2), mar=c(4,2,4,0), oma=c(0,14,4,0))
 
-barplot(as.matrix(res_top1), beside=T, las=1, col =  (col_classes[ord]),  main ="", horiz=T, cex.names = 2, cex.axis=1.5)
+barplot(as.matrix(res_top1_MF_ord), beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=T, cex.names = 2, cex.axis=1.5)
+axis(1, at = seq(0.1, 0.9, 0.2), labels = rep("", 5))
+
 plot.new()
-legend("bottomleft",  legend = rev(classes[ord]), fill = rev(col_classes[ord]), bg="white",   cex=2)
+legend("bottomleft",  legend = rev(classes[-6][ord_MF]), fill = rev(col_classes[-6][ord_MF]), bg="white",   cex=2)
 
 dev.off()
 
 
-
-res_top1_MF = res_top1
-ord_MF = ord
-
-
-
+ 
 
 
 
@@ -278,7 +354,7 @@ ord_MF = ord
 
 ### Evaluate the new mountain loop site 
 
-  
+
 # c_idx = 1 
 
 
@@ -372,41 +448,112 @@ dev.off()
 
 
 
+ 
+
+pred_woflood_ML_in = dt_tmp$Top1
+pred_woflood_ML_in[pred_woflood_ML_in=="flooding"] = "noactivity"
+
+obs_woflood_ML_in= dt_tmp$TrueClass
+obs_woflood_ML_in[obs_woflood_ML_in=="flooding"] = "noactivity"
+
+pred_woflood_ML_in = factor(pred_woflood_ML_in, classes[-6])
+obs_woflood_ML_in = factor(obs_woflood_ML_in, classes[-6])
+
+ 
 
 
-pred_in = factor(dt_tmp$Top1, classes)
-obs_in = factor(dt_tmp$TrueClass, classes)
+length(obs_woflood_ML_in)
+table(obs_woflood_ML_in)
+
+# without flooding
+result_ML_Top1 <- evaluateClassification(pred_woflood_ML_in, obs_woflood_ML_in)
 
 
 
-result_Top1 <- evaluateClassification(pred_in, obs_in)
-result_Top2 <- evaluateClassification( factor(dt_tmp$Top2, classes), obs_in)
-writeLines(capture.output(print(result_Top1)), con = ("Output/ClassificationAccuracy_MountainLoop_Top1.txt"))
-writeLines(capture.output(print(result_Top2)), con = ("Output/ClassificationAccuracy_MountainLoop_Top2.txt"))
+
+# Top1 + Top2
+pred_woflood_Top2_ML_in_org = dt_tmp$Top2
+pred_woflood_Top2_ML_in_org[pred_woflood_Top2_ML_in_org=="flooding"] = "noactivity"
+
+
+pred_woflood_top2_ML_in = pred_woflood_ML_in
+
+table((pred_woflood_ML_in!=obs_woflood_ML_in))
+
+top1and2_ML_idx = (pred_woflood_ML_in!=obs_woflood_ML_in) & (pred_woflood_Top2_ML_in_org==obs_woflood_ML_in)
+
+
+pred_woflood_top2_ML_in[top1and2_ML_idx] = pred_woflood_Top2_ML_in_org[top1and2_ML_idx]
+
+ 
+# without flooding
+result_ML_Top2 <- evaluateClassification(pred_woflood_top2_ML_in, obs_woflood_ML_in)
+
+
+
+
+
+
+
+
+confmat_ML = result_ML_Top1$table
+
+rownames(confmat_ML) = colnames(confmat_ML) = classes_fullnames[-6]
+
+
+ 
+confmat_ML_color <- apply(confmat_ML, MARGIN = 1:2, col)
+
+
+rownames(confmat_ML_color) = colnames(confmat_ML_color) = classes_fullnames[-6]
+
+confmat_ML_out = rbind( cbind(confmat_ML_color, Total=rowSums(confmat_ML)), c(colSums(confmat_ML), ""))
+
+
+print(xtable(confmat_ML_out),sanitize.text.function = function(x){x})
+
+
 
 
  
 
 
-res_top1 = data.frame(result_Top1$byClass[,rev(selected_metrics)])
-rownames(res_top1) = classes_fullnames
-write.xlsx(res_top1, file = "Summary tables and figures (working on it)/Table_ML_perfomance.xlsx", row.names=T)
+result_ML_Top1_all <- evaluateClassification(pred_woflood_ML_in, obs_woflood_ML_in)
+# result_Top2 <- evaluateClassification( factor(dt_tmp$Top2, classes), obs_in)
+writeLines(capture.output(print(result_ML_Top1_all)), con = ("Output/ClassificationAccuracy_MountainLoop_Top1.txt"))
+# writeLines(capture.output(print(result_Top2)), con = ("Output/ClassificationAccuracy_MountainLoop_Top2.txt"))
 
-balacc = res_top1$Balanced.Accuracy
+
+
+ 
+res_ML_top1 = data.frame(result_ML_Top1_all$byClass[,rev(selected_metrics)])
+rownames(res_ML_top1) = classes_fullnames[-6]
+write.xlsx(res_ML_top1, file = "Summary tables and figures (working on it)/Table_ML_perfomance.xlsx", row.names=T)
+
+balacc = res_ML_top1$Balanced.Accuracy
 balacc[is.na(balacc)] = 0
-ord = order(balacc, decreasing = F)
-res_top1 = res_top1[ord,]
-colnames(res_top1)[3:4] = c("F1-score", "Balanced Accuracy")
 
-pdf("Output/Fig4_ClassificationAccuracy_Top1.pdf", width = 16, height = 12)
+f1_ML = res_ML_top1$F1
+f1_ML[is.na(f1_ML)] = 0
 
-par(mfrow=c(1,3), mar=c(4,4,4,1), oma=c(0,14,4,0))
+# ord_ML = order(f1_ML, decreasing = T)
+res_ML_top1_ord = res_ML_top1[ord_MF,]
+colnames(res_ML_top1)[5:6] = c("F1-score", "Balanced Accuracy")
 
-barplot(as.matrix(res_top1_MF), beside=T, las=1, col =  (col_classes[ord_MF]),  main ="", horiz=T, cex.names = 2, cex.axis=1.5)
-barplot(as.matrix(res_top1), beside=T, las=1, col =  (col_classes[ord]),  main ="", horiz=T, cex.names = 2, cex.axis=1.5, names.arg = rep("", 4))
+pdf("Output/Fig4_ClassificationAccuracy_Top1.pdf", width = 16, height = 8)
 
+par(mfrow=c(2,2), mar=c(4,4,1,1), oma=c(0,1,4,0), xpd=NA)
+
+barplot(as.matrix(res_top1_MF_ord[, 5:6]), beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
+mtext(text = "(a)", side = 3, outer = F, adj = 0, padj =-1, at = -3.2, cex=2.5)
 plot.new()
-legend("bottomleft",  legend = rev(classes[ord_MF]), fill = rev(col_classes[ord_MF]), bg="white",   cex=2)
+# legend("topleft",  legend = rev(classes[-6][ord_MF]), fill = rev(col_classes[-6][ord_MF]), bg="white",   cex=2)
+
+barplot(as.matrix(res_ML_top1_ord[, 5:6]), beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
+mtext(text = "(b)", side = 3, outer = F, adj=0, at=-3.2, padj=-1, cex=2.5)
+plot.new()
+legend("bottomleft",  legend =  (classes[-6][ord_MF]), fill =  (col_classes[-6][ord_MF]), bg="white",   cex=2)
+
 
 dev.off()
 
@@ -417,7 +564,66 @@ dev.off()
 
 
 
- 
+emptycol = rep(NA, nrow(res_top1_MF))
+
+
+print(xtable(cbind(res_top1_MF[,c(5,6,1:4)], res_ML_top1[,c(5,6,1:4)])), NA.string ="\\multicolumn{1}{r}{-}")
+
+# ### Recall and precision
+# ord_ML = order(f1_ML, decreasing = T)
+
+# res_ML_top1_etc = data.frame(result_ML_Top1_all$byClass[,c("Specificity", "Sensitivity", "Precision", "Recall")])
+# 
+# res_ML_top1_ord = res_ML_top1[ord_MF,]
+# colnames(res_ML_top1)[5:6] = c("F1-score", "Balanced Accuracy")
+# 
+# pdf("Output/Fig4_ClassificationAccuracy_Top1.pdf", width = 16, height = 8)
+# 
+# par(mfrow=c(2,2), mar=c(4,4,1,1), oma=c(0,1,4,0), xpd=NA)
+# 
+# barplot(as.matrix(res_top1_MF_ord[, 5:6]), beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
+# mtext(text = "(a)", side = 3, outer = F, adj = 0, padj =-1, at = -3.2, cex=2.5)
+# plot.new()
+# # legend("topleft",  legend = rev(classes[-6][ord_MF]), fill = rev(col_classes[-6][ord_MF]), bg="white",   cex=2)
+# 
+# barplot(as.matrix(res_ML_top1_ord[, 5:6]), beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
+# mtext(text = "(b)", side = 3, outer = F, adj=0, at=-3.2, padj=-1, cex=2.5)
+# plot.new()
+# legend("bottomleft",  legend =  (classes[-6][ord_MF]), fill =  (col_classes[-6][ord_MF]), bg="white",   cex=2)
+# 
+# 
+# dev.off()
+# 
+# 
+# 
+# 
+# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 pdf("Output/ClassificationAccuracy_MountainLoop.pdf", width = 18, height = 10)
 par(mfrow=c(1,1))
 
@@ -444,7 +650,7 @@ legend("bottomleft", legend = classes, fill = col_classes, bg="white", cex=0.8)
 dev.off()
 
 
- 
+
 
 
 
@@ -504,5 +710,5 @@ dev.off()
 # }
 
 
- 
- 
+
+
