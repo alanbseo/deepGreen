@@ -80,7 +80,7 @@ from keras.preprocessing import image
 # from keras.applications import vgg16
 import numpy as np
 
-from tensorflow.keras.utils import multi_gpu_model # Multi-GPU Training ref: https://gist.github.com/mattiavarile/223d9c13c9f1919abe9a77931a4ab6c1
+#from tensorflow.keras.utils import multi_gpu_model # Multi-GPU Training ref: https://gist.github.com/mattiavarile/223d9c13c9f1919abe9a77931a4ab6c1
 
 import math
 
@@ -131,7 +131,7 @@ img_width, img_height = 331, 331
 # validation_data_dir = "../LabelledData/Costa Rica/FirstTraining_31Aug2019/validation/"
 # train_data_dir = "../LabelledData/Seattle/Photos_iterative_Sep2019/train/"
 
-batch_size = 255    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
+batch_size = 512    # the larger is faster in training. Cponsider 1) training sample size, 2) GPU memory, 3) throughput (img/sec)
 val_batch_size = batch_size
 epochs = 100
 
@@ -142,7 +142,7 @@ validation_split = 0.4 # % test photos
 
 dropout = 0.3
 
-loadWeights = False
+loadWeights = True
 
 addingClasses = False
 num_classes_prev = 0 # when adding existing ..
@@ -164,7 +164,7 @@ num_classes_prev = 0 # when adding existing ..
 
 sitename = "Korea"
 train_data_dir = "../LabelledData/Korea/Korea_AI_Dec2019_Training/"
-trainedweights_name = "../TrainedWeights/InceptionResnetV2_retrain_Korea_26classes_Dec2019_val_acc0.74.h5"
+trainedweights_name = "../TrainedWeights/InceptionResnetV2_retrain_Korea_27classes_Okt2020_val_acc0.78.h5"
 # trainedweights_names = "../FlickrCNN/TrainedWeights/InceptionResnetV2_retrain_Korea.h5"
 num_layers_train = 4
 
@@ -377,7 +377,6 @@ FREEZE_LAYERS = len(model.layers) - num_layers_train # train the newly added lay
 
 for layer in model_final.layers[:FREEZE_LAYERS]:
     layer.trainable = False
-
 
 
 if multiGPU:
