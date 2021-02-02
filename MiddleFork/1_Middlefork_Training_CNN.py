@@ -63,7 +63,10 @@ import numpy as np
 
 import math
 
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
+# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
+default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/deepGreen/'
+
+
 os.chdir(default_path)
 
 # split utils (@TODO reference)

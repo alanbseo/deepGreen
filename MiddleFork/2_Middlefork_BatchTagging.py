@@ -19,58 +19,53 @@ import fnmatch
 
 from shutil import copyfile
 
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 
-modelname = "InceptionResnetV2_dropout30"
+
+# from tensorflow.python.keras import backend as k
+
+
+home_path = '/Users/seo-b/'
+default_path = home_path + 'Dropbox/KIT/FlickrEU/deepGreen'
+
 
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
 # os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
 os.environ['HIP_VISIBLE_DEVICES'] = '0'
 
-# dataname = "FlickrCR_Photos_All"
-# model_json = "Model/InceptionResnetV2_retrain_CostaRica_architecture_dropout0.3.json"
-# photo_path_base = '/DATA2TB/FlickrCR_download/Nov2019_V2_Photo/'
-# out_path_base = "/DATA2TB/FlickrCR_Tagging_Nov2019/"
-#
-# trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_fourth_val_acc0.84.h5'
-# # trainedweights_name = '../FlickrCNN/TrainedWeights/InceptionResnetV2_CostaRica_retrain_30classes_finetuning_iterative_final_val_acc0.82.h5'
-# classes = ["Amphibians", "Beach", "Bicycles", "Birds", "Boat tours", "Bustravel",
-#            "Canoe", "Cows", "Diving", "Dog walking", "Fishing", "Flowers",
-#            "Horses", "Insects", "Landscapes", "Mammals",
-#            "Miscellaneous",
-#            "Monkeys Sloths", "Motorcycles", "Pplnoactivity", "Rafting", "Reptiles",
-#            "Surfing",
-#            "Swimming", "Trees-leafs", "Volcano", "Waterfall", "Whalewatching", "Ziplining",
-#            "boat other"]
-
-# Seattle
-dataname = "FlickrSeattle_Photos_All"
+# Seattle Middle Fork
 model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
-photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/UnlabelledData/Seattle/NewTestPhotos'
-# photo_path_base = '/home/alan/Dropbox/KIT/FlickrEU/FlickrCNN/Seattle/FlickrSeattle_download/Photos/AOI_CellID_Merged/' # FlickrSeattle_Photos_Flickr_All/'
-#
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
-# trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Weighted_Nov2019_val_acc0.87.h5"
-#
-out_path_base = "/DATA2TB/FlickrSeattle_Tagging_Feb2020/"
-#
+
+dataname = "MiddleFork"
+photo_path_base = home_path + 'Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/All images/MiddleFork_AllPhotos/' # Middle Fork
+
+#dataname = "MountainLoop"
+#photo_path_base = home_path + 'Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/All images/MountainLoop_AllPhotos/' # Mountain Loop
+
+# out_path_base = "/DATA10TB/FlickrSeattle_Tagging_Feb2021/"
+# out_path_base = "/SSDSATA1TB/FlickrTagging/"
+out_path_base = "~/Downloads/FlickrTagging/"
+
 classes = ["backpacking", "birdwatching", "boating", "camping", "fishing", "flooding", "hiking", "horseriding",
            "mtn_biking", "noactivity", "otheractivities", "pplnoactivity", "rock climbing", "swimming",
            "trailrunning"]
 
 
-trainedweights_name = "../FlickrCNN/TrainedWeights/InceptionResnetV2_Seattle_retrain_instabram_15classes_Okt2019_val_acc0.88.h5"
+#modelname = "InceptionResnetV2_dropout30_noweighting"
+#trainedweights_name = "../Seattle/Seattle_TaggedData_BigSize/ModelAndTrained weights/InceptionResnetV2_Seattle_retrain_instagram_15classes_Okt2019_val_acc0.88.h5"
 
+modelname = "InceptionResnetV2_dropout30_weighting"
+trainedweights_name = "../Seattle/Seattle_TaggedData_BigSize/ModelAndTrained weights/InceptionResnetV2_Seattle_retrain_instagram_15classes_Weighted_Dec2020_val_acc0.87_redone_for_traininghistory.h5"
 
 os.chdir(default_path)
 
 out_path = out_path_base + modelname + "/" + dataname + "/"
+# out_path = out_path_base +  "/" + dataname + "/"
 
-prediction_batch_size = 32  # to increase the speed of tagging .
-# number of images for one batch prediction
+prediction_batch_size = 256  # to increase the speed of tagging .
+# num+ber of images for one batch prediction
 
-top = 10  # 10  print top-n classes
+top = 10  # print top-n classes
 
 
 # Class #0 = backpacking
@@ -144,6 +139,8 @@ def onlyfiles(path):
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+
 
 foldernames = os.listdir(photo_path_base)
 
@@ -246,8 +243,8 @@ for f_idx in range(0, len(foldernames)):
         # 2nd-level
         # kind of equivalent to `sapply()' in R
         def foo_get_predicted_filename(x, x2):
-            # return (out_path + "Result/" + modelname + "/ClassifiedPhotos/" + foldername + "/" + x)
-            return (out_path + "Result/" + "/ClassifiedPhotos/" + "/" + x + "/2ndClass_" +x2 )
+            return (out_path + "/" + "" + foldername + "/" + x)
+            #return (out_path + "Result/" + "ClassifiedPhotos/" + "/" + x + "/2ndClass_" +x2 )
 
 
         predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v, predicted_class_top2_v))
@@ -277,7 +274,7 @@ for f_idx in range(0, len(foldernames)):
 
     # Write csv files
 
-    name_csv = out_path + "Result/" + modelname + "/CSV/" + foldername + ".csv"
+    name_csv = out_path + "/" + "/CSV/" + foldername + ".csv"
     if not (os.path.exists(os.path.dirname(name_csv))):
         os.makedirs(os.path.dirname(name_csv), exist_ok=False)
 
@@ -289,7 +286,7 @@ for f_idx in range(0, len(foldernames)):
 
     df_aoi.columns = header
 
-ll
+
     # @todo attention map
 
 
