@@ -5,8 +5,6 @@ import pandas as pd
 ### Avoid certificat error (source: https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)
 import requests
 
-requests.packages.urllib3.disable_warnings()
-
 from keras.applications import inception_resnet_v2
 
 from keras.preprocessing import image
@@ -29,14 +27,13 @@ from shutil import copyfile
 
 
 home_path = '/Users/seo-b/'
-home_path = '/home/alan/'
 default_path = home_path + 'Dropbox/KIT/FlickrEU/deepGreen'
 
 
 
 #!export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
 # os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
-os.environ['HIP_VISIBLE_DEVICES'] = '1'
+# os.environ['HIP_VISIBLE_DEVICES'] = '0'
 
 # Seattle Middle Fork
 model_json = "Model/InceptionResnetV2_retrain_Seattle_architecture_dropout0.3.json"
@@ -47,9 +44,9 @@ photo_path_base = home_path + 'Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_B
 #dataname = "MountainLoop"
 #photo_path_base = home_path + 'Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/All images/MountainLoop_AllPhotos/' # Mountain Loop
 
-out_path_base = "/DATA10TB/FlickrSeattle_Tagging_Feb2021/"
+# out_path_base = "/DATA10TB/FlickrSeattle_Tagging_Feb2021/"
 # out_path_base = "/SSDSATA1TB/FlickrTagging/"
-#out_path_base = home_path + "Downloads/FlickrTagging/"
+out_path_base = home_path + "Downloads/FlickrTagging/"
 
 
 # Class #0 = backpacking
@@ -127,6 +124,28 @@ model_trained = Model(inputs=model_trained.input, outputs=predictions_new)
 model_trained.load_weights(trainedweights_name)
 
 # model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
+
+
+
+
+
+
+
+
+# https://www.kaggle.com/giuseppemerendino/deep-mushroom-keras-t-sne
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def onlyfolders(path):

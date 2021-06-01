@@ -137,8 +137,7 @@ table(dt_evaluated$photo_id %in% traing_img_names)
 
 
 
-
-
+ 
 
 
 
@@ -250,6 +249,20 @@ confmat = result_Top1$table
 rownames(confmat) = colnames(confmat) = classes_fullnames[-6]
 
 
+### eval without minor classes 
+
+minor_idx = !(pred_woflood_in %in% c("trailrunning", "fishing", "horse"))
+
+pred_min = pred_woflood_in[minor_idx]
+obs_min = obs_woflood_in[minor_idx]
+
+pred_min2 = factor(pred_min)
+obs_min2 = factor(obs_min, levels = levels(factor(pred_min)))
+result_Top1_wominor <- evaluateClassification(pred_min2, obs_min2)
+
+
+
+
 
 library(xtable)
 xtable(confmat)
@@ -278,9 +291,49 @@ confmat_out = rbind( cbind(confmat_color, Total=rowSums(confmat)), c(colSums(con
 print(xtable(confmat_out),sanitize.text.function = function(x){x})
 
 
-levelplot(result_Top1$table, las=2)
+ 
+ 
+
+
+library(Thermimage)
+library(viridis)
+library(RColorBrewer)
+
+library(latticeExtra)
+
+
+confmat_MF = result_Top1$table
+confmat_MF = t(flip.matrix(t(confmat_MF)))
+
+rownames(confmat_MF) =   (classes_fullnames[-6]) 
+colnames(confmat_MF) =  rev(classes_fullnames[-6])
+ 
+confmat_MF_df = data.frame(expand.grid(x=1:14, y=1:14), value = as.numeric(confmat_MF), lb = as.numeric(confmat_MF))
+
+## Applied to the example data in my other answer, this will produce
+## an identical plot
+
+
+confmat_MF_plot = confmat_MF           
+confmat_MF_plot[confmat_MF_plot>125] = 125
+Obj <- 
+  levelplot((confmat_MF_plot), xlab="Prediction", ylab="Reference", col.regions = c(rep("white", 1), colorRampPalette(brewer.pal("YlGnBu", n = 9))(32)), at=c(-1,0, seq(1, 130, length=30)), scales=list(x=list( rot=90)))+ xyplot(y ~ x, data = confmat_MF_df,
+                                                                                                                                                                                           panel = function(y, x, ...) {
+                                                                                                                                                                                             ltext(x = x, y = y, labels = confmat_MF_df$lb, cex = 1, font = 1,fontfamily = "HersheySans")
+                                                                                                                                                                                           })
+
+
+print(Obj)
+
+pdf("Output/Fig_ConfusionMatrix_MF.pdf", width = 8, height = 8)
+
+print(Obj)
+dev.off()
+
 
  
+
+
 
 
 
@@ -494,14 +547,64 @@ result_ML_Top2 <- evaluateClassification(pred_woflood_top2_ML_in, obs_woflood_ML
 
 
 
-
+ 
 
 confmat_ML = result_ML_Top1$table
+confmat_ML = t(flip.matrix(t(confmat_ML)))
 
-rownames(confmat_ML) = colnames(confmat_ML) = classes_fullnames[-6]
+rownames(confmat_ML) =   (classes_fullnames[-6]) 
+colnames(confmat_ML) =  rev(classes_fullnames[-6])
+ 
 
+
+confmat_df = data.frame(expand.grid(x=1:14, y=1:14), value = as.numeric(confmat_ML), lb = as.numeric(confmat_ML))
+
+## Applied to the example data in my other answer, this will produce
+## an identical plot
+ 
+  
+confmat_ML_plot = confmat_ML
+
+confmat_ML_plot[confmat_ML_plot>55] = 55
+
+Obj <- 
+  levelplot((confmat_ML_plot), xlab="Prediction", ylab="Reference", col.regions = c(rep("white", 1), colorRampPalette(brewer.pal("YlGnBu", n = 9))(32)), at=c(-1,0, seq(1, 60, length=30)), scales=list(x=list( rot=90)))+xyplot(y ~ x, data = confmat_df, panel = function(y, x, ...) {
+           ltext(x = x, y = y, labels = confmat_df$lb, cex = 1, font = 1,fontfamily = "HersheySans")
+         })
+
+print(Obj)
+
+pdf("Output/Fig_ConfusionMatrix_ML.pdf", width = 8, height = 8)
+
+print(Obj)
+dev.off()
 
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 confmat_ML_color <- apply(confmat_ML, MARGIN = 1:2, col)
 
 
@@ -544,13 +647,23 @@ pdf("Output/Fig4_ClassificationAccuracy_Top1.pdf", width = 16, height = 8)
 
 par(mfrow=c(2,2), mar=c(4,4,1,1), oma=c(0,1,4,0), xpd=NA)
 
-barplot(as.matrix(res_top1_MF_ord[, 5:6]), beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
+
+toplot = as.matrix(res_top1_MF_ord[, 5:6])
+toplot[is.na(toplot)] = 0 
+barplot(toplot, beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
 mtext(text = "(a)", side = 3, outer = F, adj = 0, padj =-1, at = -3.2, cex=2.5)
+text( x=c(13,28), y=0.05, labels="n.d.", cex=1.2) # side = 3, outer = F, adj = 0, padj =-1, at = -3.2, cex=2.5)
+
 plot.new()
 # legend("topleft",  legend = rev(classes[-6][ord_MF]), fill = rev(col_classes[-6][ord_MF]), bg="white",   cex=2)
 
-barplot(as.matrix(res_ML_top1_ord[, 5:6]), beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
+toplot_ml = as.matrix(res_ML_top1_ord[, 5:6])
+toplot_ml[is.na(toplot_ml)] = 0 
+
+barplot(toplot_ml, beside=T, las=1, col =  (col_classes[-6][ord_MF]),  main ="", horiz=F, cex.names = 1.5, cex.axis=1.5)
 mtext(text = "(b)", side = 3, outer = F, adj=0, at=-3.2, padj=-1, cex=2.5)
+text( x=c(14,29), y=0.05, labels="n.d.", cex=1.2) # side = 3, outer = F, adj = 0, padj =-1, at = -3.2, cex=2.5)
+
 plot.new()
 legend("bottomleft",  legend =  (classes[-6][ord_MF]), fill =  (col_classes[-6][ord_MF]), bg="white",   cex=2)
 
@@ -560,14 +673,32 @@ dev.off()
 
 
 
+n_samples_df = read.xlsx("Output/Number_of_training_samples.xlsx")[-6,] # exclude flooding
 
+# plot(n_samples_df$n_of_internal_samples, result_Top1$byClass[,"Precision"])
+
+par(mfrow=c(1,1))
+
+plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Precision"])
+plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Recall"])
+plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Specificity"])
+plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Balanced Accuracy"])
+
+cor.test(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Specificity"])
+
+plot(n_of_samples[-6], median_prob_mf_v)
+
+dt = data.frame(Res = result_Top1$byClass[,"Specificity"], SampleNo = n_of_samples[-6], Prob = median_prob_mf_v)
+
+lm1 = lm(Res ~ ., data = dt)
+anova(lm1)
 
 
 
 emptycol = rep(NA, nrow(res_top1_MF))
 
 
-print(xtable(cbind(res_top1_MF[,c(5,6,1:4)], res_ML_top1[,c(5,6,1:4)])), NA.string ="\\multicolumn{1}{r}{-}")
+print(xtable(cbind(res_top1_MF[,c(5,6,4:1)], res_ML_top1[,c(5,6,4:1)])), NA.string ="\\multicolumn{1}{r}{-}")
 
 # ### Recall and precision
 # ord_ML = order(f1_ML, decreasing = T)

@@ -14,7 +14,7 @@ setwd(path_seattle)
 
 #### Training ACC
 
-trn_df = read.csv("ModelAndTrained weights/Flickr_MF_training_performance.csv")
+trn_df = read.csv("ModelAndTrained weights/InceptionResnetV2_Seattle_retrain_instagram_15classes_Weighted_Dec2020_val_acc0.87_redone_for_traininghistory.csv")
 summary(trn_df)
 
 pdf("Output/FlickrMiddleFork_training.pdf", width = 8, height = 6)
@@ -112,6 +112,12 @@ library(xtable)
 xtable(rbind(n_samples_df, colSums(n_samples_df)), digits = 0)
 
 
+obs_tb = table(obs_in)
+obs_ML_tb = table(obs_woflood_ML_in)
+xtable(rbind(cbind(n_samples_df, obs_tb), c(colSums(n_samples_df), sum(obs_tb) )), digits = 0)
+
+
+
 write.xlsx(n_samples_df, file = "Output/Number_of_training_samples.xlsx", row.names=T)
 
 barplot((t(n_samples_df[,1:2])), main = "Number of training images", las=2, beside=T)
@@ -206,22 +212,32 @@ mt_idx = dt$site == "MT"
 
 # prob_avg = tapply(probs_v[mf_idx], INDEX = tags_v[mf_idx], FUN = mean, na.rm=T)
 
-prob_l_mf = tapply(probs_v[mf_idx], INDEX = tags_v[mf_idx], FUN = c, na.rm=T)[classes]
+prob_l_mf = tapply(probs_v[mf_idx], INDEX = tags_v[mf_idx], FUN = c )[classes]
 prob_l_mt = tapply(probs_v[mt_idx], INDEX = tags_v[mt_idx], FUN = c, na.rm=T)[classes]
 
 
 names(prob_l_mf) = classes_fullnames
 names(prob_l_mt) = classes_fullnames
 
+prob_l_mf[[10]] = c(as.numeric(prob_l_mt[[10]]), as.numeric(prob_l_mt[[6]]))
+prob_l_mt[[10]] = c(as.numeric(prob_l_mt[[10]]), as.numeric(prob_l_mt[[6]]))
+
+
+
 pdf("Output/AFig_ClassifierConfidence.pdf", width = 18, height = 10)
 
 par(mfrow=c(1,2), mar=c(4,4,4,4), oma=c(4,4,4,4))
-boxplot(prob_l_mf, main = "Middle Fork", las=2, ylab = "Confidence of the classifier")
-boxplot(prob_l_mt, main = "Mountain Loop", las=2, ylab = "Confidence of the classifier")
+boxplot(prob_l_mf[-6], main = "Middle Fork", las=2, ylab = "Confidence of the classifier")
+boxplot(prob_l_mt[-6], main = "Mountain Loop", las=2, ylab = "Confidence of the classifier")
 
 dev.off()
 
+median_prob_mf = sapply(prob_l_mf[-6], median)
 
+median_prob_mf_v = c(unlist(median_prob_mf), 0) # trail running 0 
+
+
+plot(n_of_samples[-6], median_prob_mf_v)
 
 # 
 # # tagged images used not used in the training 

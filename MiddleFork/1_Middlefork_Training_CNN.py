@@ -19,30 +19,13 @@ import keras
 # import numpy as np
 import os
 # import cv2
-
-os.environ['HIP_VISIBLE_DEVICES'] = '0' # For AMD GPU
+os.environ['HIP_VISIBLE_DEVICES'] = '1' # For AMD GPU
 
 import csv
 import pandas as pd
 import pathlib
 import fnmatch
 
-
-### Avoid certificat error (source: https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)
-import requests
-requests.packages.urllib3.disable_warnings()
-
-
-import ssl
-
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    # Legacy Python that doesn't verify HTTPS certificates by default
-    pass
-else:
-    # Handle target environment that doesn't support HTTPS verification
-    ssl._create_default_https_context = _create_unverified_https_context
 
 
 from tensorflow.keras.applications import inception_resnet_v2
@@ -63,8 +46,8 @@ import numpy as np
 
 import math
 
-# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
-default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/deepGreen/'
+default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen/'
+#default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/deepGreen/'
 
 
 os.chdir(default_path)
@@ -133,7 +116,7 @@ learning_rate = 1e-5 # ADAM parameter
 
 
 
-num_classes = 15
+num_classes = 14
 # ****************
 # Class #0 = backpacking
 # Class #1 = birdwatching

@@ -33,8 +33,8 @@ dropbox_location = "~/Dropbox/KIT/FlickrEU/Seattle/Seattle_TaggedData_BigSize/"
 path_seattle = paste0(dropbox_location)
 setwd(path_seattle)
  
-workdir = "../FlickrCNN/Seattle/"
-gisdir = "."
+workdir = "./" # "../FlickrCNN/Seattle/"
+gisdir = "GIS and input data/"
 # save.image(paste0(workdir, savedir, "/Flickr_CR_workspace_metadata_download_17Aug2019.RData"))
 # load(paste0(workdir, savedir, "/Flickr_CR_workspace_metadata_download_17Aug2019_2.RData"))
 
@@ -56,20 +56,19 @@ proj4.DHDN <- "+proj=tmerc +lat_0=0 +lon_0=12 +k=1 +x_0=4500000 +y_0=0 +ellps=be
 # writeLines(api.key, con = apikey_con)
 # close(apikey_con)
 
-apikey_con = file("Flickr_API_KEY.txt", open = "r")
-readLines(apikey_con)
-close(apikey_con)
-# 
-
+# apikey_con = file("Flickr_API_KEY.txt", open = "r")
+# readLines(apikey_con)
+# close(apikey_con)
+#  
 
 
 
 ## Read coordinates 
 
-octPhotos = FALSE 
-newPhotos = TRUE
+doMiddleFork = FALSE 
+doMountainLook = TRUE
 
-if (octPhotos) { 
+if (doMiddleFork) { 
     
     
     aoi.poly.in = readOGR( dsn = paste0(workdir, gisdir), layer = "middlefork_AOI")  
@@ -78,45 +77,113 @@ if (octPhotos) {
     plot(aoi.poly.in)
     
     
-    aoi_coords = read.csv("../FlickrCNN/Seattle/mbsmiddlefork_flickrimages_20191027.csv")
+    aoi_coords = read.csv("GIS and input data/mbsmiddlefork_flickrimages_20191027.csv")
     aoi_sp = SpatialPoints(data.frame(x=aoi_coords$longitude, y = aoi_coords$latitude), proj4string = crs(proj4.LL))
     plot(aoi_sp, add=T)
     names(aoi_coords)[1] = "PhotoID"
     
     ### Read predicted tags 
-    path_predictedtags = paste0("../DATA2TB_LINK/Flickr15Oct2019/")
+    path_predictedtags = paste0("TaggedResult_Nov2019_Middlefork/CSV/")
     csv_name = "FlickrSeattle_AllPhotos.csv"
     csv_dt = read.csv(paste0(path_predictedtags, csv_name))
     csv_dt$PhotoID = str_extract(csv_dt$Filename, pattern = "(?<=photoid\\_)[0-9]*")
     
-} else if (newPhotos) {
+    str(csv_dt)
+    
+    tag_dt_m = as.matrix(csv_dt[,2:11])
+    prob_dt_m = as.matrix(csv_dt[,12:21])
+   
+    # merge flooding and no activity 
+    tag_dt_m[tag_dt_m=="flooding"] = "noactivity"
+     
+    prob_dt2_l = lapply(1:nrow(tag_dt_m), FUN = function(x) sort(tapply(prob_dt_m[x,], INDEX = tag_dt_m[x,], FUN = sum ), decreasing = T))
+    
+    tag_dt2_m = t(sapply(prob_dt2_l, FUN = function(x) names(x)[1:9]))
+    prob_dt2_m = t(sapply(prob_dt2_l, FUN = function(x) (x)[1:9]))
+    
+    csv_dt_updated = data.frame(Filename = csv_dt$Filename, tag_dt2_m, prob_dt2_m, PhotoID = csv_dt$PhotoID)
+    
+    colnames(csv_dt_updated)[2:10] = paste0("Top", 1:9)
+    
+    colnames(csv_dt_updated)[11:19] = paste0("Prob", 1:9)
+    
+    table(csv_dt$Top1)
+    
+    table(csv_dt_updated$Top1)
+    summary(csv_dt_updated$Prob1)
+    
+    aoi_coords_merged = merge(aoi_coords, csv_dt_updated, by.all=PhotoID, all=T) # sometimes no tags in CSV? 
+    
+    warning(nrow(aoi_coords_merged) == nrow(aoi_coords))
+    warning(nrow(aoi_coords) == nrow(csv_dt))
+    
+    aoi_spdf = SpatialPointsDataFrame(coords = aoi_sp, data = aoi_coords_merged)
+    
+    writeOGR(aoi_spdf, dsn = "Output/", layer = "FlickrMiddlefork_predicted", driver="ESRI Shapefile", overwrite_layer = T)
+    
+    plot(aoi_spdf, col = aoi_spdf$Top1)
+    
+    
+} else if (doMountainLook) {
     # The pics are from a second area in the MBS forest, in a corridor around the "Mountain Loop Hwy".
-    aoi_coords = read.csv("../FlickrCNN/Seattle/mbsmtloop_flickrimages_20200213.csv") 
+    aoi_coords = read.csv("GIS and input data/mbsmtloop_flickrimages_20200213.csv") 
 
     aoi_sp = SpatialPoints(data.frame(x=aoi_coords$longitude, y = aoi_coords$latitude), proj4string = crs(proj4.LL))
     plot(aoi_sp, add=T)
     names(aoi_coords)[1] = "PhotoID"
     
     ### Read predicted tags 
-    path_predictedtags = paste0("../DATA2TB_LINK/FlickrSeattle_Tagging_Feb2020/CSV/")
-    csv_name = "FlickrSeattle_NewPhotos.csv"
+    path_predictedtags = paste0("TaggedResult_Feb2020_Mountainloop/CSV/")
+    csv_name = "Photos.csv"
     csv_dt = read.csv(paste0(path_predictedtags, csv_name))
     csv_dt$PhotoID = str_extract(csv_dt$Filename, pattern = "[0-9]*")
+    
+    
+    
+    
+    tag_dt_m = as.matrix(csv_dt[,2:11])
+    prob_dt_m = as.matrix(csv_dt[,12:21])
+    
+    # merge flooding and no activity 
+    tag_dt_m[tag_dt_m=="flooding"] = "noactivity"
+    
+    prob_dt2_l = lapply(1:nrow(tag_dt_m), FUN = function(x) sort(tapply(prob_dt_m[x,], INDEX = tag_dt_m[x,], FUN = sum ), decreasing = T))
+    
+    tag_dt2_m = t(sapply(prob_dt2_l, FUN = function(x) names(x)[1:9]))
+    prob_dt2_m = t(sapply(prob_dt2_l, FUN = function(x) (x)[1:9]))
+    
+    csv_dt_updated = data.frame(Filename = csv_dt$Filename, tag_dt2_m, prob_dt2_m, PhotoID = csv_dt$PhotoID)
+    
+    colnames(csv_dt_updated)[2:10] = paste0("Top", 1:9)
+    
+    colnames(csv_dt_updated)[11:19] = paste0("Prob", 1:9)
+    
+    table(csv_dt$Top1)
+    table(csv_dt_updated$Top1)
+    summary(csv_dt_updated$Prob1)
+    
+    
+     
     
     aoi.poly.in = rgeos::gConvexHull(aoi_sp)
     plot(aoi.poly.in)
     plot(aoi_sp, add=T)
+    
+    aoi_coords_merged = merge(aoi_coords, csv_dt_updated, by.all=PhotoID, all=T) # sometimes no tags in CSV? 
+    
+    warning(nrow(aoi_coords_merged) == nrow(aoi_coords))
+    warning(nrow(aoi_coords) == nrow(csv_dt))
+    
+    aoi_spdf = SpatialPointsDataFrame(coords = aoi_sp, data = aoi_coords_merged)
+    
+    writeOGR(aoi_spdf, dsn = "Output/", layer = "FlickrMBSMtLoop_predicted", driver="ESRI Shapefile", overwrite = T)
+    
+    
+    plot(aoi_spdf, col = aoi_spdf$Top1)
 }
 
 
-aoi_coords_merged = merge(aoi_coords, csv_dt, by.all=PhotoID, all=T) # sometimes no tags in CSV? 
-
-warning(nrow(aoi_coords_merged) == nrow(aoi_coords))
-warning(nrow(aoi_coords) == nrow(csv_dt))
-
-aoi_spdf = SpatialPointsDataFrame(coords = aoi_sp, data = aoi_coords_merged)
-
-# writeOGR(aoi_spdf, dsn = "../DATA2TB_LINK/FlickrSeattle_Tagging_Feb2020/", layer = "FlickrMBSMtLoop_predicted", driver="ESRI Shapefile")
+ 
 
 aoi_ext = extent(aoi.poly.in)
 aoi_ul = c(aoi_ext[c(4, 2)])
@@ -419,207 +486,7 @@ stop("ends here")
 
 
 
-
-
-## Reorganise 
-aoi.poly.in$NAME_1
-head(aoi.poly.in)
-aoi.poly.in$NAME  # natural park name
-
-costarica_natpark =  readOGR(paste0(path_data, "GIS data/NatParks_CR/"), layer = "NatParks_CR", verbose = T)
-
-costarica_natpark
-
-## AOI csv 
-## predicted tags
-
-aois.done.newnames <- list.files(paste0(workdir, "/", savedir, "/Xlsx/"), pattern = "^AOI.*.\\.xlsx$", full.names = T)
-
-aoi_idx = 237 
-
-path_regrouped = "~/Dropbox/KIT/FlickrEU/Costa Rica_Data/Regrouped/"
-path_originalphotos= "/DATA2TB/FlickrCR_download/Aug2019_V1_Photo/"
-
-for (aoi_idx in 1:length(aois.done.newnames)){ 
-    aoi.dt = read.xlsx(aois.done.newnames[aoi_idx], 1)
-    if (nrow(aoi.dt)==0) { 
-        next()   
-    }
-    
-    aoi_cellid = str_extract(aois.done.newnames[aoi_idx], pattern = "(?<=CellID\\_)[0-9]*")
-    aoi_sp = SpatialPoints(cbind(as.numeric(aoi.dt$Longitude), as.numeric(aoi.dt$Latitude)), proj4string = CRS(proj4.LL))
-    
-    
-    photos_overlap = over(aoi_sp, costarica_natpark[,"NAME"])
-    n_overlap = length(photos_overlap[!is.na(photos_overlap)])
-    
-    if (n_overlap > 0) { 
-        print(paste0(aoi_idx, ": ", n_overlap))   
-        # print( table(photos_overlap))
-        # photos_overlap[!is.na(photos_overlap)]
-        
-        natparks = unique(as.character(unlist(photos_overlap)))
-        natparks = natparks[!is.na(natparks)]
-        
-        
-        for (np_idx in 1:length(natparks)) { 
-            natpark = natparks[np_idx] 
-            row_ids = which(photos_overlap$NAME == natpark)
-            
-            np_dt = aoi.dt[row_ids,]
-            unique_ids =  unique(np_dt$PhotoID)
-            unique_idxs = match(np_dt$PhotoID, unique_ids) # returns only the first matchs 
-            np_dt = np_dt[unique_idxs,] 
-            
-            
-            path_np = paste0(path_regrouped, natpark)
-            path_np_photos = paste0(path_np, "/Photos/")
-            path_np_xlsx = paste0(path_np, "/Xlsx/")
-            path_np_shp = paste0(path_np, "/Shp/")
-            
-            if (!dir.exists(path_np)) { 
-                dir.create(path_np_photos, recursive = T)
-                dir.create(path_np_xlsx, recursive = T)
-                dir.create(path_np_shp, recursive = T)
-                
-            }
-            # copy xlsx 
-            write.xlsx(np_dt, file = paste0(path_np_xlsx, "/AOI_NatPark_", natpark, "_CellID_", aoi_cellid, "_n", length(unique_idxs), ".xlsx"))                                   
-            # write shp file 
-            np_spdf = SpatialPointsDataFrame(coords = aoi_sp[row_ids[unique_idxs]], data =np_dt) 
-            writeOGR(np_spdf, dsn = paste0(path_np_shp), layer = paste0("AOI_NatPark_", natpark, "_CellID_", aoi_cellid, "_n", length(unique_idxs), "_points"), driver = "ESRI Shapefile", overwrite_layer = T)                                   
-            
-            
-            
-            # copy photos 
-            original_path = list.files(path_originalphotos, pattern = as.character(aoi_cellid ))
-            stopifnot(length(original_path) == 1)  
-            
-            for (p_idx in 1:nrow(np_dt)) {
-                p_dt = np_dt[p_idx,] 
-                # print(p_idx)
-                p_filename = list.files(paste0(path_originalphotos, "/", original_path, "/", p_dt$Year), pattern=p_dt$PhotoID, full.names = T)
-                p_filename_short = list.files(paste0(path_originalphotos, "/", original_path, "/", p_dt$Year), pattern=p_dt$PhotoID, full.names = F)
-                
-                path_target = paste0(path_np_photos, "/", p_dt$Year) # "/", p_filename_short)
-                if (!dir.exists(path_target)) { 
-                    dir.create(path_target, recursive = F)
-                }
-                
-                file.copy(p_filename, to = paste0(path_target, "/", p_filename_short) )
-                
-            }
-            
-        }
-        
-        
-        
-    }
-}
-
-
-
-# aoi.idx <- 1
-## predicted tags
-csv_files = list.files("../Costa Rica_Data/CSV", pattern = "\\.csv$")
-
-
-aois.done.v <- (sapply(csv_files, FUN = function(x) (str_split(x, pattern = "_")[[1]][2])))
-aois.done.v = sapply(str_split(aois.done.v, pattern = "CellID"), FUN = function(x) as.numeric(x[[2]]))
-
-res2 = foreach(csv_idx = 1:length(csv_files)) %do% { 
-    
-    
-    dt = read.csv(paste0("../Costa Rica_Data/CSV/",csv_files[csv_idx]))
-    # str(dt)
-    
-    tags_dt = dt[,2:11]
-    probs_dt = dt[,12:21]
-    
-    # length(table(unlist(tags_dt)))
-    
-    dt_df = data.frame(unlist(tags_dt), unlist(probs_dt))
-    colnames(dt_df) = c("Tag", "Prob")
-    
-    res = tapply(dt_df$Prob, INDEX = dt_df$Tag, FUN = sum, na.rm=T)
-    return(res)
-}
-
-names(res2) = aois.done.v
-
-par(mfrow=c(1,1), mar=c(10,4,4,4))
-barplot(sort(table(unlist(sapply(res2, FUN = names))), T), las=2)
-
-
-
-v1 = (unlist(sapply(res2, names)))
-v2 = (unlist(sapply(res2, c)))
-
-v3 = data.frame(v1, v2)
-
-weightedMean = tapply(v2, INDEX = v1, FUN = mean, na.rm=T)
-barplot(sort(weightedMean, T), las=2, ylab= "Weighted prob")
-
-predictedTags = sort(unique(v1))
-
-### spdf 
-spdf = data.frame(Tag = predictedTags, Prob = NA)
-t_idx = 1 
-
-
-for (t_idx in 21:length(predictedTags)) { 
-    tag = predictedTags[t_idx]
-    
-    prob = sapply(res2, FUN = function(x) x[names(x)==tag])
-    
-    aoi.poly.out = aoi.poly.in
-    
-    aoi.poly.out$tmp = NA
-    aoi.poly.out$tmp[ match(names(prob), aoi.poly.out$CELL_ID)] = as.numeric(prob)
-    
-    
-    pdf(paste0(tag, "_dist.pdf"), width = 12, height = 15)
-    
-    print(spplot(aoi.poly.out, "tmp", main = tag))
-    dev.off()
-}
-# dev.off()
-
-
-
-tag_top1 = table(tags_dt$Top1)
-
-levelplot(cor(probs_dt))
-
-
-corrplot(cor(probs_dt), type = "lower", )
-
-tags_v = unlist(tags_dt[,1])
-probs_v = unlist(probs_dt[, 1])
-
-
-probs_all = matrix(NA, nrow =nrow(tags_dt), ncol = 16)
-
-colnames(probs_all) = names(table(unlist(tags_dt)))
-
-
-
-
-cnames = names(table(unlist(tags_dt)))
-# for (i in 1:16) { 
-#     
-#     
-#     probs_all[,cnames[i]] = 
-# }
-# 
-
-
-# boxplot(probs_v[tags_v == "fishing"])
-
-prob_avg = tapply(probs_v, INDEX = tags_v, FUN = mean, na.rm=T)
-
-prob_l = tapply(probs_v, INDEX = tags_v, FUN = c, na.rm=T)
-
+ 
 
 
 
