@@ -133,7 +133,7 @@ for f_idx in (range(0, len(foldernames))):
 
 
         if not (os.path.exists(os.path.dirname(name_csv))):
-            os.makedirs(os.path.dirname(name_csv), exist_ok=False)
+            os.makedirs(os.path.dirname(name_csv), exist_ok=True)
 
         # base filenames
         base_filenames = list(map(os.path.basename, filenames))

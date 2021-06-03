@@ -15,8 +15,10 @@ import pandas as pd
 
 import PIL
 from PIL import ImageFile
+from torchvision.datasets import ImageFolder
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True  # read broken images
+
 
 
 # EU
@@ -31,16 +33,21 @@ default_path = '/pd/data/crafty/deepGreen'
 photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
 out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU/"
 
-# X570
-default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
-# photo_path_base = "/home/alan/Dropbox/KIT/FlickrEU/FlickrEU_download/Bayern/Flickr_Fotos_V2_Aug2018_Bayern_Sample/"
-photo_path_base = "/DATA10TB/FlickrEU_download/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
-out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Places_EU/"
-
-# X470
+# # X470
 # default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
-# photo_path_base = "/home/alan/Downloads/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
-# out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Places_EU/"
+# # photo_path_base = "/home/alan/Downloads/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
+# photo_path_base = "/home/alan/nfs_keal_pd/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
+# # out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Places_EU/"
+# out_path_base = "/home/alan/nfs_keal_pd/FlickrEU_result/Places_EU/"
+#
+# X570
+# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
+# photo_path_base = "/home/alan/Dropbox/KIT/FlickrEU/FlickrEU_download/SamplePhotos/"
+# # photo_path_base = "/DATA10TB/FlickrEU_download/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
+# out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Test/"
+#
+
+
 
 os.chdir(default_path)
 
@@ -50,9 +57,9 @@ out_path = out_path_base + model_name + "/" + dataname + "/"
 
 
 # number of workers
-num_workers = 8
+num_workers = 16
 # number of images for one batch prediction
-prediction_batch_size = 1024
+prediction_batch_size = 1280
 # number of tags to print
 top_n = 10
 
@@ -99,12 +106,37 @@ def foo_get_year(x):
     return (os.path.basename(os.path.dirname(x[0])))
 
 
+# Ignore broken images
+# https://discuss.pytorch.org/t/questions-about-dataloader-and-dataset/806/2
+# https://github.com/pytorch/pytorch/issues/1137
+class ImageFolderEX(datasets.ImageFolder):
+
+    __init__ = ImageFolder.__init__
+
+    def __getitem__(self, index):
+        path, label = self.imgs[index]
+        try:
+            return super(ImageFolderEX, self).__getitem__(index)
+        except Exception as e:
+            print(e)
+            return None   #your handling code
+        return [img, label]
+
+
+# Filter the None values in the collate_fn()
+
+def mycollate_fn(batch):
+    batch = list(filter(lambda x : x is not None, batch))
+    return torch.utils.data.dataloader.default_collate(batch)
+
+
+
 # list only folder names
 foldernames = [d for d in os.listdir(photo_path_base) if os.path.isdir(os.path.join(photo_path_base, d))]
 
-f_idx = 0
+# f_idx = 0
 
-for f_idx in (range(0, len(foldernames))):
+for f_idx in (range(18000, len(foldernames))):
 
     foldername = foldernames[f_idx]
     print(f_idx)
@@ -112,30 +144,25 @@ for f_idx in (range(0, len(foldernames))):
     photo_path_aoi = os.path.join(photo_path_base, foldername)
 
     for (root, subdirs, files) in os.walk(photo_path_aoi):
-        print('--\nroot = ' + root)
-        # print(files)
-        print(subdirs)
 
         if len(subdirs) == 0:
             continue # skip if it does not have a subdir
 
+
         # csv output file
         name_csv = out_path + "Result/" + "/CSV/" + os.path.relpath(root, photo_path_base) + ".csv"
         if os.path.exists(name_csv):
+            print("skips as it is done already")
             continue  # skip the folder if there is already the output csv file
 
 
-        # pytorch dataset and dataloader
-        dataset = {'predict' : datasets.ImageFolder(photo_path_aoi, centre_crop)}
+        print('--\nroot = ' + root)
+        print(subdirs)
 
-        # check files
-        fcnt = 0
-        try:
-            for idx, (data, image) in enumerate(dataset['predict']): fcnt += 1
-            print("all image files are valid")
-        except: # PIL.UnidentifiedImageError
-            print("skips because of faulty image files")
-            continue # skip the folder temporarily
+
+        # pytorch dataset and dataloader
+        # dataset = {'predict' : datasets.ImageFolder(photo_path_aoi, centre_crop)}
+        dataset = {'predict' : ImageFolderEX(photo_path_aoi, centre_crop)}
 
 
         # get filenames from the dataset
@@ -143,64 +170,93 @@ for f_idx in (range(0, len(foldernames))):
         years = list(map(foo_get_year, dataset['predict'].imgs))
 
         n_files = len(base_filenames)
+        print("n_files=" + str(n_files))
 
-        if n_files <= 1:
+
+        if n_files == 0:
+            print("skips as there is no image")
             continue  # skip the folder if there is no image
 
+
+        # # check files
+        # fcnt = 0
+        # try:
+        #     for idx, (data, image) in enumerate(dataset['predict']): fcnt += 1
+        #     print("all image files are valid")
+        # except: # PIL.UnidentifiedImageError
+        #     print("skips because of faulty image files")
+        #     # continue # skip the folder temporarily
+
+
+
         # parallelised
-        batch_cnt = 1;
+        batch_cnt = 1
 
         prediction_batch_size_tmp = min(prediction_batch_size, n_files)
         # prediction_batch_size_tmp = 1
-        dataloader = {'predict': torch.utils.data.DataLoader(dataset['predict'], batch_size = prediction_batch_size_tmp, shuffle=False, num_workers=num_workers)}
+        # dataloader = {'predict': torch.utils.data.DataLoader(dataset['predict'], batch_size = prediction_batch_size_tmp, shuffle=False, num_workers=num_workers)} # fails when broken images
+
+        # Pass the collate_fn() to the DataLoader()
+        dataloader = {'predict': torch.utils.data.DataLoader(dataset['predict'], batch_size = prediction_batch_size_tmp, shuffle=False, num_workers=num_workers, collate_fn = mycollate_fn)}
+
+        # print("n_files=" + str(len(dataloader['predict'].dataset.imgs)))
 
 
-        print("n_files=" + str(n_files))
         print("batch size = " + str(prediction_batch_size_tmp))
 
-        for inputs, labels in dataloader['predict']:
+        try:
+            for inputs, labels in dataloader['predict']:
 
-            print("batch:" + str(batch_cnt))
-            # print(inputs)
-            logit = model.forward(inputs)
-            h_x = F.softmax(logit, 1).data.squeeze()
-            # probs, idx = h_x.sort(0, True) # does not work for batch tagging
-            predictions = h_x.numpy()
+                print("batch:" + str(batch_cnt))
+                # print(inputs)
+                logit = model.forward(inputs)
+                h_x = F.softmax(logit, 1).data.squeeze()
+                # probs, idx = h_x.sort(0, True) # does not work for batch tagging
+                predictions = h_x.numpy()
 
-            ## top selected classes
-            top_classes_idx_arr = np.argsort(predictions)[:, ::-1][:, :top_n]
+                print("predictions " + str(predictions.shape))
 
-            top_classes_arr = classes_arr[top_classes_idx_arr]
-            # print(top_classes_arr)
+                # https://stackoverflow.com/questions/12575421/convert-a-1d-array-to-a-2d-array-in-numpy
+                if len(predictions.shape) ==1:
+                    print("convert-a-1d-array-to-a-2d-array")
+                    predictions = np.reshape(predictions, (-1, predictions.size))
 
-            bsize_tmp = labels.size().numel()
+                ## top selected classes
+                top_classes_idx_arr = np.argsort(predictions)[:, ::-1][:, :top_n]
 
-            # create an empty array
-            top_classes_probs_arr = np.empty([bsize_tmp, top_n])
-            top_classes_probs_arr[:] = 0
+                top_classes_arr = classes_arr[top_classes_idx_arr]
+                # print(top_classes_arr)
 
-            for i in range(0, bsize_tmp):
-                top_classes_probs_arr[i,] = predictions[i, [top_classes_idx_arr[i,]]]
+                bsize_tmp = labels.size().numel()
 
-            top_classes_arr[0, :]
-            top_classes_probs_arr[0, :]
+                # create an empty array
+                top_classes_probs_arr = np.empty([bsize_tmp, top_n])
+                top_classes_probs_arr[:] = 0
 
-            predicted_class_v = top_classes_arr[:, 0]  # top1
+                for i in range(0, bsize_tmp):
+                    top_classes_probs_arr[i,] = predictions[i, [top_classes_idx_arr[i,]]]
 
+                top_classes_arr[0, :]
+                top_classes_probs_arr[0, :]
 
-            arr_tmp = pd.DataFrame(np.concatenate((top_classes_arr, top_classes_probs_arr), axis=1))
-
-            if batch_cnt == 1:
-                arr_aoi = arr_tmp.to_numpy()
-            else:
-                arr_aoi = np.concatenate((arr_aoi, arr_tmp), axis=0)
-            # increase count
-            batch_cnt+=1
+                predicted_class_v = top_classes_arr[:, 0]  # top1
 
 
+                arr_tmp = pd.DataFrame(np.concatenate((top_classes_arr, top_classes_probs_arr), axis=1))
+
+                if batch_cnt == 1:
+                    arr_aoi = arr_tmp.to_numpy()
+                else:
+                    arr_aoi = np.concatenate((arr_aoi, arr_tmp), axis=0)
+                # increase count
+                batch_cnt+=1
+        except Exception as e:
+            print(e)
+            print("skips this folder")
+            continue # your handling code
 
         if not (os.path.exists(os.path.dirname(name_csv))):
-            os.makedirs(os.path.dirname(name_csv), exist_ok=False)
+            os.makedirs(os.path.dirname(name_csv), exist_ok=True)
 
 
         # Write a Pandas data frame to a csv file
