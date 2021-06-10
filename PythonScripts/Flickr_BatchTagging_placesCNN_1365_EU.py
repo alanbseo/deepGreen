@@ -19,14 +19,14 @@ from torchvision.datasets import ImageFolder
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True  # read broken images
 
-
+import loadcaffe
 
 # EU
 dataname = "EU28"
 # the architecture to use
 arch = 'resnet18'
 # arch = 'resnet50'
-model_name = 'places365_' + arch
+model_name = 'places1365_' + arch
 
 
 # number of workers
@@ -40,9 +40,8 @@ top_n = 10
 
 # KEAL
 default_path = '/pd/data/crafty/deepGreen'
-# photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
-photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photos/"
-out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU2019/"
+photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
+out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU/"
 
 # # X470
 # default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
@@ -53,11 +52,11 @@ out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU2019/"
 # # prediction_batch_size = 1024
 
 # X570
-# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
-# photo_path_base = "/home/alan/Dropbox/KIT/FlickrEU/FlickrEU_download/SamplePhotos/"
-# # photo_path_base = "/DATA10TB/FlickrEU_download/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
-# out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Test/"
-#
+default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
+photo_path_base = "/home/alan/Dropbox/KIT/FlickrEU/FlickrEU_download/SamplePhotos/"
+# photo_path_base = "/DATA10TB/FlickrEU_download/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
+out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Test/"
+
 
 
 
@@ -68,7 +67,7 @@ out_path = out_path_base + model_name + "/" + dataname + "/"
 
 
 
-
+model = loadcaffe.load('deploy_alexnet_places365.prototxt', 'alexnet_places365.caffemodel', 'cudnn')
 
 # load the pre-trained weights
 model_file = '%s_places365.pth.tar' % arch
@@ -81,6 +80,19 @@ checkpoint = torch.load(model_file, map_location=lambda storage, loc: storage)
 state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
 model.load_state_dict(state_dict)
 model.eval()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # load the image transformer
@@ -142,7 +154,7 @@ foldernames = [d for d in os.listdir(photo_path_base) if os.path.isdir(os.path.j
 
 # f_idx = 0
 
-for f_idx in reversed(range(0, len(foldernames))):
+for f_idx in reversed(range(0, 25000)):
 
     foldername = foldernames[f_idx]
     print(f_idx)
@@ -163,7 +175,7 @@ for f_idx in reversed(range(0, len(foldernames))):
 
 
         print('--\nroot = ' + root)
-        # print(subdirs)
+        print(subdirs)
 
 
         # pytorch dataset and dataloader

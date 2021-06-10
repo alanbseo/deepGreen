@@ -1,4 +1,5 @@
 import os
+import json
 
 import numpy as np
 import pandas as pd
@@ -14,6 +15,12 @@ from keras.models import Model
 import fnmatch
 
 from shutil import copyfile
+
+import PIL
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True # read broken images
+
+
 
 default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
 #default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/deepGreen'
@@ -84,35 +91,41 @@ toCopyFile = False
 # Class #26 = wild boar
 
 # EU
+dataname = "Bayern"
+
 modelname = "InceptionResnetV2"
 
-out_path_base = "/Users/seo-b/Downloads/Tagging_Bayern"
-
+#photo_path_base = "/DATA10TB/FlickrEU_download/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
+photo_path_base = "/home/alan/Downloads/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
+out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Tagging_Bayern/"
 
 os.chdir(default_path)
 
 out_path = out_path_base + modelname + "/" + dataname + "/"
 
-prediction_batch_size = 128  # to increase the speed of tagging .
-# number of images for one batch prediction
 
-top = 10  # 10  print top-n classes
+# number of images for one batch prediction
+prediction_batch_size = 512
+
+top = 10  #  print top-n classes
 
 img_width = img_height = 299
 model_trained = inception_resnet_v2.InceptionResNetV2(include_top=True, weights='imagenet',input_tensor=None, input_shape=(img_width, img_height, 3))
 
 
-classes =
-classes_arr = np.array(classes)
-# # Imagenet class labels
-# imagenet_labels_filename = "Data/imagenet_class_index.json"
-# with open(imagenet_labels_filename) as f:
-#     CLASS_INDEX = json.load(f)
+# Imagenet class labels
+imagenet_labels_filename = "Data/imagenet_class_index.json"
+with open(imagenet_labels_filename) as f:
+    CLASS_INDEX = json.load(f)
 #
-# classlabel = []
-# for i in range(CLASS_INDEX.__len__()):
-#     classlabel.append(CLASS_INDEX[str(i)][1])
-# classes = np.array(classlabel)
+classes = []
+for i in range(CLASS_INDEX.__len__()):
+    classes.append(CLASS_INDEX[str(i)][1])
+
+
+
+classes_arr = np.array(classes)
+
 
 num_classes = len(classes)
 
@@ -124,18 +137,6 @@ num_classes = len(classes)
 # Model reconstruction from JSON file
 # with open(model_json, 'r') as f:
 #    model_trained = model_from_json(f.read())
-
-
-
-model_trained = inception_resnet_v2.InceptionResNetV2(include_top=False, weights='imagenet',input_tensor=None, input_shape=(img_width, img_height, 3))
-x = model_trained.output
-x = GlobalAveragePooling2D()(x) # before dense layer
-x = Dense(1024, activation='relu')(x)
-predictions_new = Dense(num_classes, activation='softmax', name='softmax')(x)
-model_trained = Model(inputs=model_trained.input, outputs=predictions_new)
-
-# Load weights into the new model
-model_trained.load_weights(trainedweights_name)
 
 # model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
 
@@ -153,46 +154,12 @@ model_trained.load_weights(trainedweights_name)
 
 
 
-from PIL import ImageFile
-ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-# foldernames = os.listdir(photo_path_base)
+# list only folder names
 foldernames=[d for d in os.listdir(photo_path_base) if os.path.isdir(os.path.join(photo_path_base, d))]
 
-f_idx = 6
+f_idx = 0
 
 
-# walk_dir = photo_path_base
-# print('walk_dir = ' + walk_dir)
-
-# If your current working directory may change during script execution, it's recommended to
-# immediately convert program arguments to an absolute path. Then the variable root below will
-# be an absolute path as well. Example:
-# walk_dir = os.path.abspath(walk_dir)
-# print('walk_dir (absolute) = ' + os.path.abspath(walk_dir))
-#
-for root, subdirs, files in os.walk(photo_path_base):
-    print('--\nroot = ' + root)
-#     # list_file_path = os.path.join(root, 'my-directory-list.txt')
-#     # print('list_file_path = ' + list_file_path)
-#     #
-#     # with open(list_file_path, 'wb') as list_file:
-#     for subdir in subdirs:
-#         print('\t- subdirectory ' + subdir)
-#
-#     for filename in files:
-#         file_path = os.path.join(root, filename)
-#
-#         print('\t- file %s (full path: %s)' % (filename, file_path))
-#
-#             # with open(file_path, 'rb') as f:
-#             #     f_content = f.read()
-#             #     list_file.write(('The file %s contains:\n' % filename).encode('utf-8'))
-#             #     list_file.write(f_content)
-#             #     list_file.write(b'\n')
-
-
-f_idx = 5
 
 
 for f_idx in range(0, len(foldernames)):
@@ -204,8 +171,8 @@ for f_idx in range(0, len(foldernames)):
 
     for (root, subdirs, files) in os.walk(photo_path_aoi):
         print('--\nroot = ' + root)
-        print(files)
-        print(subdirs)
+        #print(files)
+        #print(subdirs)
 
         ### Read filenames
         filenames_raw = os.listdir(root)
@@ -222,6 +189,16 @@ for f_idx in range(0, len(foldernames)):
 
         if n_files == 0:
             continue  # skip the folder if there is no image
+
+        # csv output file
+        name_csv = out_path + "Result/" + modelname + "/CSV/" + os.path.relpath(root, photo_path_base)  + ".csv"
+        if os.path.exists(name_csv):
+            continue    # skip the folder if there is already the output csv file
+
+        if not (os.path.exists(os.path.dirname(name_csv))):
+            os.makedirs(os.path.dirname(name_csv), exist_ok=False)
+
+
 
 
         # base filenames
@@ -252,13 +229,19 @@ for f_idx in range(0, len(foldernames)):
             images = []
 
             for img_name in filenames_batch:
-                print(img_name)
+                # print(img_name)
                 img_name = os.path.join(photo_path_aoi, root, img_name)
 
                 # load an image in PIL format
-                img = image.load_img(img_name, target_size=(img_width, img_height))
+                try:
+                    img = image.load_img(img_name, target_size=(img_width, img_height))
+                except:
+                    img = PIL.Image.new(mode = "RGB", size = (img_width, img_height))
+
+
                 img = image.img_to_array(img)
                 img = np.expand_dims(img, axis=0)
+
 
                 # prepare the image (normalisation for channels)
                 img_preprocessed = inception_resnet_v2.preprocess_input(img.copy())
@@ -276,7 +259,7 @@ for f_idx in range(0, len(foldernames)):
             top_classes_idx_arr = np.argsort(predictions)[:, ::-1][:, :top]
 
             top_classes_arr = classes_arr[top_classes_idx_arr]
-            print(top_classes_arr)
+            #print(top_classes_arr)
 
             # create an empty array
             top_classes_probs_arr = np.empty([bsize_tmp, top])
@@ -320,23 +303,20 @@ for f_idx in range(0, len(foldernames)):
             # for i in range(0, n_files):
             #     if not (os.path.exists(save_folder_names[i])):
             #         os.makedirs(save_folder_names[i], exist_ok=False)
-            if (toCopyFile):
-                for i in range(0, bsize_tmp):
-
-                    save_folder = predicted_filenames[i]
-                    print(save_folder)
-
-                    if not (os.path.exists(save_folder)):
-                        os.makedirs(save_folder, exist_ok=False)
-                        copyfile(filenames_batch[i], predicted_filenames[i] + '/' + os.path.basename(filenames_batch[i]))
+            # if (toCopyFile):
+            #     for i in range(0, bsize_tmp):
+            #
+            #         save_folder = predicted_filenames[i]
+            #         print(save_folder)
+            #
+            #         if not (os.path.exists(save_folder)):
+            #             os.makedirs(save_folder, exist_ok=False)
+            #             copyfile(filenames_batch[i], predicted_filenames[i] + '/' + os.path.basename(filenames_batch[i]))
 
 
 
         # Write csv files
 
-        name_csv = out_path + "Result/" + modelname + "/CSV/" + os.path.relpath(root, photo_path_base)  + ".csv"
-        if not (os.path.exists(os.path.dirname(name_csv))):
-            os.makedirs(os.path.dirname(name_csv), exist_ok=False)
 
         # Write a Pandas data frame
         df_aoi = pd.concat([pd.DataFrame(base_filenames), pd.DataFrame(arr_aoi)], axis=1)

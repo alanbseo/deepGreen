@@ -21,7 +21,9 @@ from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True  # read broken images
 
-
+# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
+# default_path = '/Users/seo-b/Dropbox/KIT/FlickrEU/deepGreen'
+modelname = "InceptionResnetV2_dropout30"
 
 # copy jpg files
 toCopyFile = False
@@ -31,23 +33,24 @@ toCopyFile = False
 # os.environ['HIP_VISIBLE_DEVICES'] = '0'
 
 
-modelname = "InceptionResnetV2"
-
-
 # EU
 dataname = "EU"
 
-# KEAL
+modelname = "InceptionResnetV2"
+
+# photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
+# out_path_base = "/pd/data/crafty/FlickrEU_result/Tagging_EU/"
+
+
 default_path = '/pd/data/crafty/deepGreen'
 # photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
 photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photos/"
-out_path_base = "/pd/data/crafty/FlickrEU_result/Tagging_EU2019/"
+out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU2019/"
 
-# Linux
-# default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
-# photo_path_base = "/home/alan/Dropbox/KIT/FlickrEU/FlickrEU_download/SamplePhotos/"
-#  # photo_path_base = "/DATA10TB/FlickrEU_download/Bayern/Flickr_Aug2018_V2_Photo_Bayern/"
-# out_path_base = "/home/alan/Dropbox/KIT/FlickrEU/LabelledData/Test/"
+
+
+
+
 
 
 
@@ -79,38 +82,55 @@ num_classes = len(classes)
 
 ##### Predict
 
+# Load the retrained CNN model
+
+# Model reconstruction from JSON file
+# with open(model_json, 'r') as f:
+#    model_trained = model_from_json(f.read())
+
+# model_final = multi_gpu_model(model_final, gpus=2, cpu_merge=True, cpu_relocation=False)
+
+
+# def onlyfolders(path):
+#     for file in os.listdir(path):
+#         if os.path.isdir(os.path.join(path, file)):
+#             yield file
+#
+#
+# def onlyfiles(path):
+#     for file in os.listdir(path):
+#         if os.path.isdir(os.path.join(path, file)):
+#             yield file
 
 
 # list only folder names
 foldernames = [d for d in os.listdir(photo_path_base) if os.path.isdir(os.path.join(photo_path_base, d))]
 
-f_idx = 1
+f_idx = 0
 
-for f_idx in reversed(range(0, len(foldernames))):
-# for f_idx in (range(0, 1)):
+for f_idx in (range(0, len(foldernames))):
 
     foldername = foldernames[f_idx]
-    print("folder idx:" + str(f_idx))
+    print(f_idx)
     print(foldername)
     photo_path_aoi = os.path.join(photo_path_base, foldername)
 
     for (root, subdirs, files) in os.walk(photo_path_aoi):
-
-        if len(subdirs) == 0:
-            continue # skip if it does not have a subdir
         print('--\nroot = ' + root)
+        # print(files)
+        # print(subdirs)
 
         # csv output file
-        name_csv = out_path + "Result/" + "/CSV/" + os.path.relpath(root, photo_path_base) + ".csv"
+        name_csv = out_path + "Result/" + modelname + "/CSV/" + os.path.relpath(root, photo_path_base) + ".csv"
         if os.path.exists(name_csv):
-            print("skips as it is done already")
             continue  # skip the folder if there is already the output csv file
 
 
         ### Read filenames
-
-        filenames_raw = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(photo_path_aoi)) for f in fn]
+        filenames_raw = os.listdir(root)
         # print(filenames_raw)
+
+        # filenames_raw = [os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(photo_path_aoi)) for f in fn]
 
         filenames1 = fnmatch.filter(filenames_raw, "*.jpg")
         filenames2 = fnmatch.filter(filenames_raw, "*.JPG")
@@ -119,19 +139,13 @@ for f_idx in reversed(range(0, len(foldernames))):
 
         n_files = len(filenames)
 
-        # print(filenames)
-
-
-        def foo_get_year(x):
-            return (os.path.basename(os.path.dirname(x)))
-
-        years = list(map(foo_get_year, filenames))
-
-
         if n_files == 0:
-            print("skips as there is no image")
+            print('skip')
             continue  # skip the folder if there is no image
 
+
+        if not (os.path.exists(os.path.dirname(name_csv))):
+            os.makedirs(os.path.dirname(name_csv), exist_ok=True)
 
         # base filenames
         base_filenames = list(map(os.path.basename, filenames))
@@ -244,13 +258,11 @@ for f_idx in reversed(range(0, len(foldernames))):
             #             copyfile(filenames_batch[i], predicted_filenames[i] + '/' + os.path.basename(filenames_batch[i]))
 
         # Write csv files
-        if not (os.path.exists(os.path.dirname(name_csv))):
-            os.makedirs(os.path.dirname(name_csv), exist_ok=True)
 
         # Write a Pandas data frame
-        df_aoi = pd.concat([pd.DataFrame(base_filenames), pd.DataFrame(years), pd.DataFrame(arr_aoi)], axis=1)
+        df_aoi = pd.concat([pd.DataFrame(base_filenames), pd.DataFrame(arr_aoi)], axis=1)
         header = np.concatenate(
-            (["Filename"],  ["Year"],["Top1", "Top2", "Top3", "Top4", "Top5", "Top6", "Top7", "Top8", "Top9", "Top10"],
+            (["Filename"], ["Top1", "Top2", "Top3", "Top4", "Top5", "Top6", "Top7", "Top8", "Top9", "Top10"],
              ["Prob1", "Prob2", "Prob3", "Prob4", "Prob5", "Prob6", "Prob7", "Prob8", "Prob9", "Prob10"]))
 
         df_aoi.columns = header
