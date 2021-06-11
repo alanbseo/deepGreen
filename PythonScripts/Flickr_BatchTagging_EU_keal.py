@@ -39,9 +39,9 @@ dataname = "EU"
 
 # KEAL
 default_path = '/pd/data/crafty/deepGreen'
-# photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
-photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photos/"
-out_path_base = "/pd/data/crafty/FlickrEU_result/Tagging_EU2019/"
+photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
+# photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photos/"
+out_path_base = "/pd/data/crafty/FlickrEU_result/Tagging_EU2018_v2/"
 
 # Linux
 # default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'

@@ -24,7 +24,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True  # read broken images
 # EU
 dataname = "EU28"
 # the architecture to use
-arch = 'resnet18'
+arch = 'resnet50'
 # arch = 'resnet50'
 model_name = 'places365_' + arch
 
@@ -40,9 +40,11 @@ top_n = 10
 
 # KEAL
 default_path = '/pd/data/crafty/deepGreen'
-# photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
-photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photos/"
-out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU2019/"
+photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
+out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU2018_v3/"
+
+# photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photos/"
+# out_path_base = "/pd/data/crafty/FlickrEU_result/Places_EU2019_v3/"
 
 # # X470
 # default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
