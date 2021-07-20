@@ -223,14 +223,64 @@ prob_l_mf[[10]] = c(as.numeric(prob_l_mt[[10]]), as.numeric(prob_l_mt[[6]]))
 prob_l_mt[[10]] = c(as.numeric(prob_l_mt[[10]]), as.numeric(prob_l_mt[[6]]))
 
 
+col_tmp = viridis(2)
 
-pdf("Output/AFig_ClassifierConfidence.pdf", width = 18, height = 10)
+pdf("Output/AFig_ClassifierConfidence.pdf", width = 20, height = 10, pointsize = 25)
 
-par(mfrow=c(1,2), mar=c(4,4,4,4), oma=c(4,4,4,4))
-boxplot(prob_l_mf[-6], main = "Middle Fork", las=2, ylab = "Confidence of the classifier")
-boxplot(prob_l_mt[-6], main = "Mountain Loop", las=2, ylab = "Confidence of the classifier")
+par(mfrow=c(1,1), mar=c(4,4,4,4), oma=c(4,1,1,10), xpd = NA)
+boxplot(prob_l_mf[-6], at =(1:14)*5 - 1, main = "", las=2, ylab = "Confidence of the classifier", cex=0.3, names = F, col=col_tmp[1], notch=F, boxwex=1, outline = T, xlim=c(3, 14*4), axes=c(F))
+axis(side=2)
+axis(side=1, at= (1:14)*5, labels = rep("", 14), cex=0.7, las=2, srt=60)
+
+text(y=rep(0.1), x= (1:14)*5, labels = classes[-6][ord_MF], srt=60, adj = 1)
+
+boxplot(prob_l_mt[-6], at = 1:14*5 + 1, main = "Mountain Loop", las=2, ylab = "Confidence of the classifier", cex=0.2, col = col_tmp[2], add=T, notch=F, boxwex=1, outline = T, names=F, axes=F)
+
+text(14*5-1.5, 0.8, "n.d.", srt=90, cex = 0.8, col=col_tmp[1])
+
+legend("topright",  legend =  c("Middle Fork", "Mountain Loop"), fill =  col_tmp, bg="white", cex=1.2, inset = c(0.05, 1.5), ncol = 2)
 
 dev.off()
+
+
+
+
+
+
+# if notch is TRUE, a notch is drawn in each side of the boxes. If the notches of two plots do not overlap this is ‘strong evidence’ that the two medians differ (Chambers et al, 1983, p. 62). See boxplot.stats for the calculations used.
+
+box_col = viridis::viridis(3)[2:3]
+plot_names = c("Photo-User-Days for existence", "Photo-User-Days for landscape aesthetics")
+
+pdf("Figures/MultualInfo_new_fullname_2021Juli7_boxplot.pdf", width =12, height = 8)
+par(mfrow=c(1,1), mar=c(10,4,4,1))
+
+boxplot(  t(mi_boot_arr[1,,]), at = 1:ncol(mi.iter.avg)- 0.25, xlim=c(0.75, 10.25), ylim=c(0.12, 0.54), ylab = "Mutual Information (Normalized)",  xaxt="n", xlab="", pch=15, las=1, notch=T, outline=T, cex=0.3, boxwex=0.3, col=box_col[1], cex.lab=1.2)
+# axis(side=1, at=1:10, labels=indiNames[c(1:10)], cex=0.7, las=2)
+# 
+boxplot(t(mi_boot_arr[2,,]), at = 1:ncol(mi.iter.avg)+0.25, ylim=c(0.1, 0.60),   xaxt="n", xlab="", pch=15, las=1, notch=T, outline=T, cex=0.3, add=T,boxwex=0.3, col=box_col[2])
+
+axis(side=1, at=1:10, labels = rep("",, 10), cex=0.7, las=2, srt=60)
+text(1:10, 0, indiNames[1:10], srt = 45, adj = c(0.4, -1.8), xpd = TRUE, cex=1.2)
+
+legend("topleft", legend = plot_names, col=box_col, pch=15, bty="n", cex=1.2)
+
+
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 median_prob_mf = sapply(prob_l_mf[-6], median)
 

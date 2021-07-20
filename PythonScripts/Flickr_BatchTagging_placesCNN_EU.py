@@ -32,7 +32,7 @@ model_name = 'places365_' + arch
 # number of workers
 num_workers = 8
 # number of images for one batch prediction
-prediction_batch_size = 2048
+prediction_batch_size = 512
 # number of tags to print
 top_n = 10
 

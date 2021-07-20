@@ -9,8 +9,7 @@ from keras.applications import inception_resnet_v2
 from keras.preprocessing import image
 
 img_width, img_height = 331, 331
-from keras.layers import Dense, GlobalAveragePooling2D
-from keras.models import Model
+
 
 import fnmatch
 
@@ -26,11 +25,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True  # read broken images
 # copy jpg files
 toCopyFile = False
 
-# !export HIP_VISIBLE_DEVICES=0,1 #  For 2 GPU training
-# os.environ['HIP_VISIBLE_DEVICES'] = '0,1'
-# os.environ['HIP_VISIBLE_DEVICES'] = '0'
-
-
+  
 modelname = "InceptionResnetV2"
 
 
@@ -40,8 +35,10 @@ dataname = "EU"
 # KEAL
 default_path = '/pd/data/crafty/deepGreen'
 photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_14May2018/May2018_V1_Photo/"
+out_path_base = "/pd/data/crafty/FlickrEU_result/Tagging_EU2018_v3/"
+
 # photo_path_base = "/pd/data/crafty/FlickrEU_DOWNLOAD_11Jan2019/Jan2019_V1_Photos/"
-out_path_base = "/pd/data/crafty/FlickrEU_result/Tagging_EU2018_v2/"
+# out_path_base = "/pd/data/crafty/FlickrEU_result/Tagging_EU2019_v3/"
 
 # Linux
 # default_path = '/home/alan/Dropbox/KIT/FlickrEU/deepGreen'
@@ -86,7 +83,7 @@ foldernames = [d for d in os.listdir(photo_path_base) if os.path.isdir(os.path.j
 
 f_idx = 1
 
-for f_idx in reversed(range(0, len(foldernames))):
+for f_idx in (range(10000, len(foldernames))):
 # for f_idx in (range(0, 1)):
 
     foldername = foldernames[f_idx]
@@ -159,14 +156,23 @@ for f_idx in reversed(range(0, len(foldernames))):
 
             images = []
 
-            for img_name in filenames_batch:
-                # print(img_name)
-                img_name = os.path.join(photo_path_aoi, root, img_name)
+            images_broken_idx = np.empty(bsize_tmp, dtype=bool)
+            images_broken_idx[:] = False
+
+
+            for f_idx, fname in enumerate(filenames_batch):
+                # print(f_idx, fname)
+
+                 # print(img_name)
+                img_name = os.path.join(photo_path_aoi, root, fname)
 
                 # load an image in PIL format
                 try:
                     img = image.load_img(img_name, target_size=(img_width, img_height))
                 except:
+                    print("skips as it is broken")
+                    print(f_idx, fname)
+                    images_broken_idx[f_idx] = True
                     img = PIL.Image.new(mode="RGB", size=(img_width, img_height))
 
                 img = image.img_to_array(img)
@@ -218,6 +224,9 @@ for f_idx in reversed(range(0, len(foldernames))):
 
 
             # predicted_filenames = list(map(foo_get_predicted_filename, predicted_class_v))
+
+            top_classes_arr[images_broken_idx,] = ""
+            top_classes_probs_arr[images_broken_idx,]= 0
 
             arr_tmp = pd.DataFrame(np.concatenate((top_classes_arr, top_classes_probs_arr), axis=1))
 

@@ -1,23 +1,9 @@
 
-#backpacking: 97
-#birdwatching: 52
-#boating: 18
-#camping: 81
-#fishing: 2
-#flooding: 9
-#hiking: 3616
-#horseriding: 22
-#mtn_biking: 140
-#noactivity: 10106
-#otheractivities:307
-#pplnoactivity: 17
-#rockclimbing: 198
-#swimming: 174
 library(parallel)
 library(doSNOW)
 library(openxlsx)
 # library(xlsx)
-library(rJava)
+# library(rJava)
 library(caret)
 library(gplots)
 library(stringr)
@@ -173,12 +159,15 @@ evaluateClassification <- function(pred_in, obs_in) {
   macroF1 = mean(f1, na.rm=T)
   
   
+  
   print(" ************ Macro Precision/Recall/F1 ************")
   res$macro =  data.frame(macroPrecision, macroRecall, macroF1)
   print(res$macro )
   
   return(res)
 }
+
+
 
 
 
@@ -261,6 +250,11 @@ obs_min2 = factor(obs_min, levels = levels(factor(pred_min)))
 result_Top1_wominor <- evaluateClassification(pred_min2, obs_min2)
 
 
+mean(result_Top1$byClass[, "Balanced Accuracy"], na.rm=T)
+
+mean(result_Top1$byClass[, "Balanced Accuracy"], na.rm=T)
+result_Top1$overall
+result_Top1$macro
 
 
 
@@ -643,7 +637,7 @@ f1_ML[is.na(f1_ML)] = 0
 res_ML_top1_ord = res_ML_top1[ord_MF,]
 colnames(res_ML_top1)[5:6] = c("F1-score", "Balanced Accuracy")
 
-pdf("Output/Fig4_ClassificationAccuracy_Top1.pdf", width = 16, height = 8)
+pdf("Output/Fig4_ClassificationAccuracy_Top1_oldversion.pdf", width = 16, height = 8)
 
 par(mfrow=c(2,2), mar=c(4,4,1,1), oma=c(0,1,4,0), xpd=NA)
 
@@ -670,6 +664,24 @@ legend("bottomleft",  legend =  (classes[-6][ord_MF]), fill =  (col_classes[-6][
 
 dev.off()
 
+pdf("Output/Fig4_ClassificationAccuracy_Top1.pdf", width = 8, height = 6)
+
+par(mfrow=c(1,1), mar=c(8,5,1,4), oma=c(0,1,4,0), xpd=NA)
+
+
+toplot = as.matrix(rbind(res_top1_MF_ord[, 5], res_ML_top1_ord[, 5]))
+toplot[is.na(toplot)] = 0 
+col_tmp = viridis(2)
+
+barplot(toplot, beside=T, las=2, col = col_tmp,  main ="", horiz=F, cex.names = 1.5, cex.axis=1.2, cex.lab=1.2, ylab = "F1-Score")
+# axis(2, # , at = (1:14)*3 -1 , labels = classes[-6][ord_MF], srt=45, las=2, line = NA, lwd = 0)
+text(y=rep(-0.03, 14), x= (1:14)*3 -1, labels = classes[-6][ord_MF], srt=60, adj=1)
+# text( x=c(13,28), y=0.05, labels="n.d.", cex=1.2) # side = 3, outer = F, adj = 0, padj =-1, at = -3.2, cex=2.5)
+
+legend("topright",  legend =  c("Middle Fork", "Mountain Loop"), fill =  col_tmp, bg="white", cex=1.2, inset = c(0.25, 1.3), ncol = 2)
+
+
+dev.off()
 
 
 
@@ -679,19 +691,62 @@ n_samples_df = read.xlsx("Output/Number_of_training_samples.xlsx")[-6,] # exclud
 
 par(mfrow=c(1,1))
 
-plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Precision"])
-plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Recall"])
-plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Specificity"])
-plot(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Balanced Accuracy"])
+plot(n_samples_df[, "n_of_samples"], result_Top1$byClass[,"Precision"])
+plot(n_samples_df[, "n_of_samples"], result_Top1$byClass[,"Recall"])
+plot(n_samples_df[, "n_of_samples"], result_Top1$byClass[,"Specificity"])
+plot(n_samples_df[, "n_of_samples"], result_Top1$byClass[,"Balanced Accuracy"])
 
-cor.test(n_samples_df[-6, "n_of_samples"], result_Top1$byClass[,"Specificity"])
+plot(n_samples_df[, "n_of_samples"], result_Top1$byClass[,"Sensitivity"])
 
-plot(n_of_samples[-6], median_prob_mf_v)
 
-dt = data.frame(Res = result_Top1$byClass[,"Specificity"], SampleNo = n_of_samples[-6], Prob = median_prob_mf_v)
+# Middle Fork
 
-lm1 = lm(Res ~ ., data = dt)
-anova(lm1)
+nona_idx = !(is.na(result_Top1$byClass[,"F1"]))
+
+cf_1 = cor.test(n_samples_df[nona_idx, "n_of_samples"], result_Top1$byClass[nona_idx,"F1"])
+cf_1 = cor.test(n_samples_df[ , "n_of_samples"], result_Top1$byClass[ ,"F1"])
+
+cor.test(n_samples_df[ , "n_of_samples"], result_Top1$byClass[ ,"F1"])
+cor.test(n_samples_df[ , "n_of_samples"], result_Top1$byClass[ ,"F1"], method = "spearman")
+
+cf_2 = cor.test(n_samples_df[, "n_of_internal_samples"], result_Top1$byClass[,"F1"])
+cf_3 = cor.test(n_samples_df[, "n_of_external_samples"], result_Top1$byClass[,"F1"])
+
+
+cf_1 = cor.test(n_samples_df[, "n_of_samples"], result_Top1$byClass[,"F1"])
+
+
+
+cb_1 = cor.test(n_samples_df[, "n_of_samples"], result_Top1$byClass[,"Balanced Accuracy"])
+cb_2 = cor.test(n_samples_df[, "n_of_internal_samples"], result_Top1$byClass[,"Balanced Accuracy"])
+cb_3 = cor.test(n_samples_df[, "n_of_external_samples"], result_Top1$byClass[,"Balanced Accuracy"])
+
+
+c_l = list(cf_1, cf_2, cf_3, cb_1, cb_2, cb_3)
+
+c_df = data.frame(t(sapply(c_l, FUN = function(x) c(x$estimate, x$conf.int, x$p.value))))
+rownames(c_df)= c("F1_all", "F1_int", "F1_ext", "BA_all", "BA_int", "BA_ext")
+colnames(c_df) = c("r", "r_025", "r_975", "p")
+
+c_df = c_df[1:3,]
+
+
+pdf("Output/AFig_Correlation_NumberOfSamples_F1.pdf", width = 8, height = 6)
+
+plotCI(x = 1:3, y = c_df$r, ui = c_df$r_975, li = c_df$r_025, ylab= "Pearson's r", xlab="", labels = "", main = "Correlation between # of samples and F1-Score (MF)", axes=F, pch=20, cex=1)
+axis(side=1, at=1:3, labels = c("All (p=0.41)", "Internal (p=0.34)", "External (p=0.88)"))
+axis(side = 2)
+
+abline(a = 0, b = 0, lty=2)
+
+dev.off()
+
+# plot(n_samples_df[], median_prob_mf_v)
+# 
+# dt = data.frame(Res = result_Top1$byClass[,"Specificity"], SampleNo = n_of_samples[-6], Prob = median_prob_mf_v)
+# 
+# lm1 = lm(Res ~ ., data = dt)
+# anova(lm1)
 
 
 
@@ -732,25 +787,7 @@ print(xtable(cbind(res_top1_MF[,c(5,6,4:1)], res_ML_top1[,c(5,6,4:1)])), NA.stri
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
